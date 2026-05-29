@@ -52,8 +52,8 @@ export default async function AdminLoginPage() {
             Acesso restrito
           </h1>
           <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#6f555d]">
-            Entre com uma conta Google autorizada para validar inscrições e
-            realizar o sorteio.
+            Entre com o e-mail autorizado para validar inscrições e realizar o
+            sorteio.
           </p>
 
           <div className="mt-7">

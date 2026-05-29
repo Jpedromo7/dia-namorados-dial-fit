@@ -27,7 +27,7 @@ export const DIAL_FIT_GOOGLE_REVIEW_URL =
 export const DIAL_BEACH_GOOGLE_REVIEW_URL =
   "https://www.google.com/maps/search/?api=1&query=Dial%20Beach%20Academia";
 export const CAMPAIGN_RULES_URL =
-  "https://dialfit.com.br/regulamento-dia-dos-namorados";
+  "/campanha-namorados/regulamento-dia-dos-namorados-dial-fit.pdf";
 
 export const CAMPAIGN_UNITS = ["Dial Fit", "Dial Beach"] as const;
 
