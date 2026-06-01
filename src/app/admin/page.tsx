@@ -35,9 +35,17 @@ export default async function AdminPage() {
     redirect("/admin/login");
   }
 
-  const initialEntries = configured
-    ? await getAdminCampaignEntries()
-    : MOCK_CAMPAIGN_ENTRIES;
+  let initialEntries = configured ? [] : MOCK_CAMPAIGN_ENTRIES;
+  let databaseErrorMessage = "";
+
+  if (configured) {
+    try {
+      initialEntries = await getAdminCampaignEntries();
+    } catch {
+      databaseErrorMessage =
+        "Login autorizado, mas o banco da campanha não abriu. Confira se a SUPABASE_SERVICE_ROLE_KEY do Vercel pertence ao projeto Supabase atual e se as tabelas da campanha foram criadas.";
+    }
+  }
 
   return (
     <main className="campaign-bg min-h-screen px-5 py-6 text-[#1f1719] sm:px-6 lg:py-8">
@@ -82,6 +90,12 @@ export default async function AdminPage() {
             Admin em modo demonstração. Configure Supabase, Service Role e
             ADMIN_EMAILS para ativar banco real, login restrito e sorteio
             persistido.
+          </div>
+        ) : null}
+
+        {databaseErrorMessage ? (
+          <div className="campaign-frame-soft bg-[#fff0f3]/92 p-4 text-sm font-semibold leading-6 text-[#a4213d]">
+            {databaseErrorMessage}
           </div>
         ) : null}
 
@@ -137,7 +151,7 @@ export default async function AdminPage() {
 
         <AdminCampaignPanel
           initialEntries={initialEntries}
-          persistChanges={configured}
+          persistChanges={configured && !databaseErrorMessage}
         />
       </div>
     </main>
