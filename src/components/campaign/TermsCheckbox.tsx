@@ -72,7 +72,9 @@ export function TermsCheckbox({
           className="mt-1 h-4 w-4 rounded border-[#b7c8bc] text-[#0e8b4a] accent-[#0e8b4a]"
         />
         <span className="relative leading-6">
-          Li e concordo com o regulamento da campanha.{" "}
+          Confirmo que sou aluno ativo de plano anual ou anual recorrente da
+          Dial Fit, sei que plano mensal não participa, e li e concordo com o
+          regulamento da campanha.{" "}
           <a
             href={CAMPAIGN_RULES_URL}
             target="_blank"

@@ -557,8 +557,9 @@ export function RegistrationLayer({
                 Faça sua inscrição
               </h1>
               <p className="mt-3 text-base leading-7 text-[#6f555d]">
-                Preencha seus dados e indique seu acompanhante para participar
-                da campanha.
+                Preencha seus dados e indique seu acompanhante. A campanha é
+                exclusiva para alunos ativos dos planos anuais da Dial Fit:
+                anual ou anual recorrente.
               </p>
             </div>
 
@@ -567,7 +568,7 @@ export function RegistrationLayer({
                 <legend className="ml-2 px-2">
                   <span className="inline-flex items-center gap-2 rounded-md border border-[#3b111c]/20 bg-white px-3 py-1.5 text-lg font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/6">
                     <UserRound size={19} aria-hidden="true" />
-                    Dados do aluno ativo
+                    Dados do aluno ativo de plano anual
                   </span>
                 </legend>
 
@@ -644,6 +645,7 @@ export function RegistrationLayer({
                 </div>
                 <p className="text-xs font-medium leading-5 text-[#7a5f67]">
                   Cada CPF pode aparecer em apenas uma inscrição da campanha.
+                  Planos mensais não participam do sorteio.
                 </p>
               </fieldset>
 
@@ -895,9 +897,11 @@ export function RegistrationLayer({
                     Dois casais viverão uma noite especial
                   </h2>
                   <p className="mt-4 text-sm leading-6 text-white/82">
-                    Alunos ativos da Dial Fit podem se cadastrar com um
-                    acompanhante. O sorteio acontece em {DRAW_DATE_LABEL}, e o
-                    jantar dos vencedores será no dia{" "}
+                    Alunos ativos dos planos anuais da Dial Fit, incluindo
+                    plano anual e anual recorrente, podem se cadastrar com um
+                    acompanhante. Alunos de plano mensal não participam. O
+                    sorteio acontece em {DRAW_DATE_LABEL}, e o jantar dos
+                    vencedores será no dia{" "}
                     {PRIZE_DINNER_DATE_LABEL}.
                   </p>
                 </div>

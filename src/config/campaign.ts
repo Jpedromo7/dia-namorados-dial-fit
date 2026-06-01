@@ -2,7 +2,7 @@ export const CAMPAIGN_NAME = "Dia dos Namorados Dial Fit";
 export const CAMPAIGN_SUBTITLE =
   "Concorra a um jantar especial para casal no Restaurante Lombardia.";
 export const CAMPAIGN_COMPLEMENT =
-  "Alunos ativos podem se cadastrar e indicar um acompanhante para participar da campanha.";
+  "Participação exclusiva para alunos ativos dos planos anuais da Dial Fit: plano anual ou plano anual recorrente. Plano mensal não participa.";
 export const WINNING_COUPLES_COUNT = 2;
 
 export const DIALFIT_LOGO = "/campanha-namorados/dialfit-logo.png";

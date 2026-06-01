@@ -24,7 +24,7 @@ import { FloatingHeartsEffect } from "./FloatingHeartsEffect";
 import { LombardiaPhotoCarousel } from "./LombardiaPhotoCarousel";
 
 const howItWorks = [
-  "Cadastre seus dados como aluno ativo.",
+  "Confirme que você é aluno ativo de plano anual ou anual recorrente.",
   "Indique quem vai viver esse jantar com você.",
   "Acompanhe a confirmação e aguarde o sorteio especial.",
 ];
@@ -100,6 +100,9 @@ export function PresentationLayer({
               </span>
               <span className="inline-flex items-center gap-2 rounded-md border-2 border-[#3b111c] bg-[#e7f7ed] px-3 py-2 text-sm font-semibold text-[#0b723e]">
                 {WINNING_COUPLES_COUNT} casais vencedores
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-md border-2 border-[#3b111c] bg-white px-3 py-2 text-sm font-semibold text-[#5b1224]">
+                Planos anuais ativos
               </span>
             </div>
 
@@ -241,6 +244,9 @@ export function PresentationLayer({
 
               <p className="mt-5 text-base leading-7 text-[#60454d] sm:text-lg">
                 {CAMPAIGN_COMPLEMENT}
+              </p>
+              <p className="mt-3 max-w-xl rounded-md border border-[#a4213d]/22 bg-[#fff0f3]/82 px-4 py-3 text-sm font-semibold leading-6 text-[#7a1027]">
+                Alunos de plano mensal não entram no sorteio.
               </p>
             </div>
 
