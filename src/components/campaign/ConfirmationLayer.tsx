@@ -8,7 +8,7 @@ import {
   Utensils,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CAMPAIGN_NAME,
   DIALFIT_LOGO,
@@ -30,25 +30,18 @@ import { RaffleResultCard } from "./RaffleResultCard";
 export function ConfirmationLayer({
   couplePhotoDataUrl,
   entries,
+  raffleWinners,
   latestEntry,
   onRestart,
 }: {
   couplePhotoDataUrl?: string | null;
   entries: CampaignEntry[];
+  raffleWinners: CampaignEntry[];
   latestEntry: CampaignEntry | null;
   onRestart: () => void;
 }) {
   const [shareStatus, setShareStatus] = useState("");
   const [drawReady, setDrawReady] = useState(false);
-  const raffleWinners = useMemo(
-    () =>
-      drawReady
-        ? entries
-            .filter((entry) => entry.status === "Validado")
-            .slice(0, WINNING_COUPLES_COUNT)
-        : [],
-    [drawReady, entries],
-  );
 
   useEffect(() => {
     const drawTime = new Date(DRAW_DATE).getTime();

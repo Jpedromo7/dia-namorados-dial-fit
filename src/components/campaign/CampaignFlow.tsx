@@ -203,8 +203,10 @@ function useStoredCouplePhoto() {
 
 export function CampaignFlow({
   initialEntries = MOCK_CAMPAIGN_ENTRIES,
+  initialRaffleWinners = [],
 }: {
   initialEntries?: CampaignEntry[];
+  initialRaffleWinners?: CampaignEntry[];
 }) {
   const [currentStep, setCurrentStep] =
     useState<CampaignStep>("presentation");
@@ -491,6 +493,7 @@ export function CampaignFlow({
           <ConfirmationLayer
             couplePhotoDataUrl={resumableCouplePhotoDataUrl}
             entries={publicEntries}
+            raffleWinners={initialRaffleWinners}
             latestEntry={latestEntry}
             onRestart={restartFlow}
           />

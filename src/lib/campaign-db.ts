@@ -706,6 +706,12 @@ export async function getRaffleWinners() {
   return applyCurrentRaffleNumbers(supabase, winners);
 }
 
+export async function getPublicRaffleWinners() {
+  const winners = await getRaffleWinners();
+
+  return winners.map(redactPublicEntry);
+}
+
 export async function drawCampaignWinners(adminEmail: string) {
   const drawTime = new Date(DRAW_DATE).getTime();
 

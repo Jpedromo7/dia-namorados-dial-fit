@@ -21,10 +21,31 @@ function downloadTextFile(filename: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
+function randomIntExclusive(maxExclusive: number) {
+  const randomValues = new Uint32Array(1);
+  const randomRange = 2 ** 32;
+  const limit = Math.floor(randomRange / maxExclusive) * maxExclusive;
+  let value = 0;
+
+  do {
+    window.crypto.getRandomValues(randomValues);
+    value = randomValues[0] ?? 0;
+  } while (value >= limit);
+
+  return value % maxExclusive;
+}
+
 function drawDistinctWinners(entries: CampaignEntry[]) {
-  return [...entries]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, WINNING_COUPLES_COUNT);
+  const shuffledEntries = [...entries];
+
+  for (let index = shuffledEntries.length - 1; index > 0; index -= 1) {
+    const targetIndex = randomIntExclusive(index + 1);
+    const currentEntry = shuffledEntries[index];
+    shuffledEntries[index] = shuffledEntries[targetIndex] as CampaignEntry;
+    shuffledEntries[targetIndex] = currentEntry as CampaignEntry;
+  }
+
+  return shuffledEntries.slice(0, WINNING_COUPLES_COUNT);
 }
 
 function formatWinnerLine(entry: CampaignEntry, index: number) {
