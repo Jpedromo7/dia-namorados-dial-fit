@@ -3,7 +3,11 @@
 import { useLayoutEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { MOCK_CAMPAIGN_ENTRIES } from "@/data/mockEntries";
 import { normalizeDocument } from "@/lib/campaign";
-import type { CampaignEntry, RegistrationPayload } from "@/types/campaign";
+import type {
+  CampaignEntry,
+  RegistrationExtras,
+  RegistrationPayload,
+} from "@/types/campaign";
 import { ConfirmationLayer } from "./ConfirmationLayer";
 import { CTAHeartsEffect } from "./CTAHeartsEffect";
 import { PresentationLayer } from "./PresentationLayer";
@@ -11,6 +15,7 @@ import { RegistrationLayer } from "./RegistrationLayer";
 import { type CampaignStep, StepIndicator } from "./StepIndicator";
 
 const LAST_ENTRY_STORAGE_KEY = "dialfit-campaign:last-entry";
+const LAST_PHOTO_STORAGE_KEY = "dialfit-campaign:last-couple-photo";
 
 function isStoredCampaignEntry(value: unknown): value is CampaignEntry {
   if (!value || typeof value !== "object") {
@@ -57,7 +62,19 @@ function storeEntry(entry: CampaignEntry) {
   }
 }
 
-function subscribeToStoredEntry(onStoreChange: () => void) {
+function storeCouplePhoto(photoDataUrl: string | null) {
+  try {
+    if (photoDataUrl) {
+      window.localStorage.setItem(LAST_PHOTO_STORAGE_KEY, photoDataUrl);
+    } else {
+      window.localStorage.removeItem(LAST_PHOTO_STORAGE_KEY);
+    }
+  } catch {
+    // The photo is optional; storage limits should not block the campaign flow.
+  }
+}
+
+function subscribeToLocalStorage(onStoreChange: () => void) {
   if (typeof window === "undefined") {
     return () => {};
   }
@@ -73,6 +90,14 @@ function getStoredEntrySnapshot() {
   }
 
   return window.localStorage.getItem(LAST_ENTRY_STORAGE_KEY) ?? "";
+}
+
+function getStoredPhotoSnapshot() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  return window.localStorage.getItem(LAST_PHOTO_STORAGE_KEY) ?? "";
 }
 
 function getServerStoredEntrySnapshot() {
@@ -109,7 +134,7 @@ function findStoredEntryInList(
 
 function useStoredEntry(initialEntries: CampaignEntry[]) {
   const storedEntrySnapshot = useSyncExternalStore(
-    subscribeToStoredEntry,
+    subscribeToLocalStorage,
     getStoredEntrySnapshot,
     getServerStoredEntrySnapshot,
   );
@@ -131,6 +156,16 @@ function useStoredEntry(initialEntries: CampaignEntry[]) {
   }, [initialEntries, storedEntrySnapshot]);
 }
 
+function useStoredCouplePhoto() {
+  const storedPhotoSnapshot = useSyncExternalStore(
+    subscribeToLocalStorage,
+    getStoredPhotoSnapshot,
+    getServerStoredEntrySnapshot,
+  );
+
+  return storedPhotoSnapshot || null;
+}
+
 export function CampaignFlow({
   initialEntries = MOCK_CAMPAIGN_ENTRIES,
 }: {
@@ -140,9 +175,18 @@ export function CampaignFlow({
     useState<CampaignStep>("presentation");
   const [entries, setEntries] = useState<CampaignEntry[]>(initialEntries);
   const [latestEntry, setLatestEntry] = useState<CampaignEntry | null>(null);
+  const [latestCouplePhotoDataUrl, setLatestCouplePhotoDataUrl] = useState<
+    string | null
+  >(null);
   const [celebrationKey, setCelebrationKey] = useState(0);
   const storedEntry = useStoredEntry(initialEntries);
+  const storedCouplePhotoDataUrl = useStoredCouplePhoto();
   const resumableEntry = latestEntry ?? storedEntry;
+  const resumableCouplePhotoDataUrl =
+    latestCouplePhotoDataUrl ??
+    (storedEntry && resumableEntry?.id === storedEntry.id
+      ? storedCouplePhotoDataUrl
+      : null);
 
   const entriesWithResumableEntry = useMemo(() => {
     if (!resumableEntry) {
@@ -183,20 +227,32 @@ export function CampaignFlow({
     window.requestAnimationFrame(() => window.scrollTo(0, 0));
   }
 
-  function showEntryConfirmation(entry: CampaignEntry) {
+  function showEntryConfirmation(
+    entry: CampaignEntry,
+    options: RegistrationExtras = {},
+  ) {
+    const couplePhotoDataUrl =
+      options.couplePhotoDataUrl ??
+      (storedEntry?.id === entry.id ? storedCouplePhotoDataUrl : null);
+
     storeEntry(entry);
+    storeCouplePhoto(couplePhotoDataUrl ?? null);
     setEntries((currentEntries) =>
       currentEntries.some((currentEntry) => currentEntry.id === entry.id)
         ? currentEntries
         : [...currentEntries, entry],
     );
     setLatestEntry(entry);
+    setLatestCouplePhotoDataUrl(couplePhotoDataUrl ?? null);
     setCurrentStep("confirmation");
     setCelebrationKey((current) => current + 1);
     resetViewport();
   }
 
-  async function handleRegister(payload: RegistrationPayload) {
+  async function handleRegister(
+    payload: RegistrationPayload,
+    options: RegistrationExtras = {},
+  ) {
     const response = await fetch("/api/campaign/entries", {
       method: "POST",
       headers: {
@@ -217,7 +273,7 @@ export function CampaignFlow({
 
     const { entry } = (await response.json()) as { entry: CampaignEntry };
 
-    showEntryConfirmation(entry);
+    showEntryConfirmation(entry, options);
   }
 
   async function handleLookupRegistration(document: string) {
@@ -304,6 +360,7 @@ export function CampaignFlow({
 
         {currentStep === "confirmation" ? (
           <ConfirmationLayer
+            couplePhotoDataUrl={resumableCouplePhotoDataUrl}
             entries={publicEntries}
             latestEntry={latestEntry}
             onRestart={restartFlow}

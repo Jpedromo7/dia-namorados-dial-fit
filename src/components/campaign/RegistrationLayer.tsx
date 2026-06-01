@@ -2,11 +2,14 @@
 
 import {
   ArrowLeft,
+  Camera,
   Check,
   Heart,
   HeartHandshake,
+  ImagePlus,
   LogIn,
   Send,
+  X,
   UserRound,
 } from "lucide-react";
 import Image from "next/image";
@@ -29,7 +32,11 @@ import {
   WINNING_COUPLES_COUNT,
 } from "@/config/campaign";
 import { normalizeDocument } from "@/lib/campaign";
-import type { CampaignUnit, RegistrationPayload } from "@/types/campaign";
+import type {
+  CampaignUnit,
+  RegistrationExtras,
+  RegistrationPayload,
+} from "@/types/campaign";
 import { FloatingHeartsEffect } from "./FloatingHeartsEffect";
 import { ReviewUnitsSection } from "./ReviewUnitsSection";
 import { TermsCheckbox } from "./TermsCheckbox";
@@ -72,6 +79,8 @@ const REQUIRED_FIELDS: FormField[] = [
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DOCUMENT_TAKEN_MESSAGE = "Este CPF já está cadastrado na campanha.";
+const MAX_COUPLE_PHOTO_BYTES = 8 * 1024 * 1024;
+const MAX_COUPLE_PHOTO_DIMENSION = 1200;
 
 const buttonHearts = [
   { left: "18%", delay: "0ms", x: "-12px" },
@@ -81,6 +90,51 @@ const buttonHearts = [
 
 function isFieldEmpty(value: string) {
   return value.trim().length === 0;
+}
+
+function loadImageFromObjectUrl(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new window.Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Imagem inválida."));
+    image.src = src;
+  });
+}
+
+async function prepareCouplePhoto(file: File) {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Escolha uma imagem válida.");
+  }
+
+  if (file.size > MAX_COUPLE_PHOTO_BYTES) {
+    throw new Error("Escolha uma foto de até 8 MB.");
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await loadImageFromObjectUrl(objectUrl);
+    const sourceWidth = image.naturalWidth || image.width;
+    const sourceHeight = image.naturalHeight || image.height;
+    const largestSide = Math.max(sourceWidth, sourceHeight);
+    const scale = Math.min(1, MAX_COUPLE_PHOTO_DIMENSION / largestSide);
+    const width = Math.max(1, Math.round(sourceWidth * scale));
+    const height = Math.max(1, Math.round(sourceHeight * scale));
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      throw new Error("Não foi possível preparar a foto.");
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    context.drawImage(image, 0, 0, width, height);
+
+    return canvas.toDataURL("image/jpeg", 0.84);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 function trimForm(
@@ -188,7 +242,10 @@ export function RegistrationLayer({
 }: {
   canShowStoredRegistration: (document: string) => boolean;
   onBack: () => void;
-  onRegister: (payload: RegistrationPayload) => Promise<void> | void;
+  onRegister: (
+    payload: RegistrationPayload,
+    extras?: RegistrationExtras,
+  ) => Promise<void> | void;
   onShowStoredRegistration: (document: string) => void;
   takenDocuments: string[];
 }) {
@@ -198,8 +255,14 @@ export function RegistrationLayer({
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [buttonBurst, setButtonBurst] = useState(0);
+  const [couplePhotoDataUrl, setCouplePhotoDataUrl] = useState<string | null>(
+    null,
+  );
+  const [photoError, setPhotoError] = useState("");
+  const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
   const submitTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -277,6 +340,7 @@ export function RegistrationLayer({
     !hasDocumentErrors &&
     reviewIsComplete &&
     acceptedTerms &&
+    !isPreparingPhoto &&
     !isSubmitting;
 
   function updateField(name: Exclude<FormField, "unit">, value: string) {
@@ -288,6 +352,43 @@ export function RegistrationLayer({
     setSubmitError(
       "O login com Google dos alunos ficará disponível quando o OAuth for ativado no Supabase.",
     );
+  }
+
+  async function handleCouplePhotoChange(file: File | undefined) {
+    if (!file) {
+      return;
+    }
+
+    setPhotoError("");
+    setSubmitError("");
+    setIsPreparingPhoto(true);
+
+    try {
+      const preparedPhoto = await prepareCouplePhoto(file);
+      setCouplePhotoDataUrl(preparedPhoto);
+    } catch (error) {
+      setCouplePhotoDataUrl(null);
+      setPhotoError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível preparar a foto.",
+      );
+    } finally {
+      setIsPreparingPhoto(false);
+
+      if (photoInputRef.current) {
+        photoInputRef.current.value = "";
+      }
+    }
+  }
+
+  function removeCouplePhoto() {
+    setCouplePhotoDataUrl(null);
+    setPhotoError("");
+
+    if (photoInputRef.current) {
+      photoInputRef.current.value = "";
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -310,8 +411,10 @@ export function RegistrationLayer({
 
     submitTimerRef.current = window.setTimeout(async () => {
       try {
-        await onRegister(payload);
+        await onRegister(payload, { couplePhotoDataUrl });
         setAcceptedTerms(false);
+        setCouplePhotoDataUrl(null);
+        setPhotoError("");
         setReviewedUnit("");
         setReviewConfirmed(false);
         setAttemptedSubmit(false);
@@ -510,6 +613,94 @@ export function RegistrationLayer({
                     }
                     onChange={updateField}
                   />
+                </div>
+              </fieldset>
+
+              <fieldset className="grid gap-4 rounded-[1.5rem] border border-[#f0d1d8] bg-[#fffaf8]/66 p-5">
+                <legend className="ml-2 px-2">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-lg font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/6">
+                    <Camera size={19} aria-hidden="true" />
+                    Foto para o story
+                  </span>
+                </legend>
+
+                <div className="grid gap-4 md:grid-cols-[190px_1fr] md:items-center">
+                  <div
+                    className="relative min-h-[190px] overflow-hidden rounded-[1.45rem] border border-[#ead0d6] bg-[#fff2f4] shadow-sm shadow-[#5b1224]/6"
+                    style={
+                      couplePhotoDataUrl
+                        ? {
+                            backgroundImage: `linear-gradient(180deg,rgba(43,10,20,0.02),rgba(43,10,20,0.18)),url(${couplePhotoDataUrl})`,
+                            backgroundPosition: "center",
+                            backgroundSize: "cover",
+                          }
+                        : undefined
+                    }
+                  >
+                    {!couplePhotoDataUrl ? (
+                      <div className="flex h-full min-h-[190px] flex-col items-center justify-center gap-3 px-5 text-center text-[#8b6270]">
+                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#a4213d] shadow-sm shadow-[#5b1224]/8">
+                          <ImagePlus size={24} aria-hidden="true" />
+                        </span>
+                        <span className="text-sm font-semibold">
+                          Foto opcional do casal
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-[#4e3039]">
+                      Deixe o story mais pessoal
+                    </p>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-[#7a5f67]">
+                      A foto é opcional e será usada apenas para montar a arte
+                      de participação no próprio navegador.
+                    </p>
+
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                      <label
+                        htmlFor="couplePhoto"
+                        className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0e8b4a] px-5 text-sm font-semibold text-white shadow-lg shadow-[#0e8b4a]/16 transition duration-300 hover:-translate-y-0.5 hover:bg-[#0b723e]"
+                      >
+                        <ImagePlus size={18} aria-hidden="true" />
+                        {couplePhotoDataUrl ? "Trocar foto" : "Escolher foto"}
+                      </label>
+                      <input
+                        ref={photoInputRef}
+                        id="couplePhoto"
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={(event) =>
+                          void handleCouplePhotoChange(
+                            event.target.files?.[0],
+                          )
+                        }
+                      />
+                      {couplePhotoDataUrl ? (
+                        <button
+                          type="button"
+                          onClick={removeCouplePhoto}
+                          className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[#7d2237]/18 bg-white px-5 text-sm font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/5 transition duration-300 hover:-translate-y-0.5 hover:bg-[#fff7f1]"
+                        >
+                          <X size={18} aria-hidden="true" />
+                          Remover
+                        </button>
+                      ) : null}
+                    </div>
+
+                    {isPreparingPhoto ? (
+                      <p className="mt-3 text-sm font-semibold text-[#0e8b4a]">
+                        Preparando foto...
+                      </p>
+                    ) : null}
+                    {photoError ? (
+                      <p className="mt-3 text-sm font-semibold text-[#a4213d]">
+                        {photoError}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
               </fieldset>
 

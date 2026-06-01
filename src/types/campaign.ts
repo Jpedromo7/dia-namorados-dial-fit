@@ -18,6 +18,10 @@ export type RegistrationPayload = {
   acceptedTerms: true;
 };
 
+export type RegistrationExtras = {
+  couplePhotoDataUrl?: string | null;
+};
+
 export type CampaignEntry = RegistrationPayload & {
   id: string;
   status: EntryStatus;

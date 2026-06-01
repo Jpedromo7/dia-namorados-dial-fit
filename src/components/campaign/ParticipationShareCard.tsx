@@ -80,6 +80,24 @@ function drawCoverImage(
   context.drawImage(image, x, y, drawWidth, drawHeight);
 }
 
+function drawCoverImageInRect(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const imageRatio = image.width / image.height;
+  const targetRatio = width / height;
+  const drawWidth = imageRatio > targetRatio ? height * imageRatio : width;
+  const drawHeight = imageRatio > targetRatio ? height : width / imageRatio;
+  const drawX = x + (width - drawWidth) / 2;
+  const drawY = y + (height - drawHeight) / 2;
+
+  context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+}
+
 function drawContainImage(
   context: CanvasRenderingContext2D,
   image: HTMLImageElement,
@@ -153,7 +171,10 @@ function drawWrappedText(
   return currentY + lineHeight;
 }
 
-async function downloadParticipationPng(entry: CampaignEntry | null) {
+async function downloadParticipationPng(
+  entry: CampaignEntry | null,
+  couplePhotoDataUrl: string | null,
+) {
   const canvas = document.createElement("canvas");
   const width = 1080;
   const height = 1920;
@@ -209,9 +230,12 @@ async function downloadParticipationPng(entry: CampaignEntry | null) {
   roundedRect(context, 70, 86, width - 140, height - 172, 70);
   context.stroke();
 
-  const [dialfitLogo, lombardiaLogo] = await Promise.all([
+  const [dialfitLogo, lombardiaLogo, couplePhoto] = await Promise.all([
     loadCanvasImage(DIALFIT_LOGO).catch(() => null),
     loadCanvasImage(LOMBARDIA_LOGO).catch(() => null),
+    couplePhotoDataUrl
+      ? loadCanvasImage(couplePhotoDataUrl).catch(() => null)
+      : Promise.resolve(null),
   ]);
 
   if (dialfitLogo) {
@@ -228,49 +252,88 @@ async function downloadParticipationPng(entry: CampaignEntry | null) {
 
   const student = entry?.studentName ?? "Nome do aluno";
   const companion = entry?.companionName ?? "Nome do acompanhante";
+  const titleY = couplePhoto ? 1010 : 570;
+  const nameY = couplePhoto ? 1130 : 710;
+  const nameLineHeight = couplePhoto ? 92 : 116;
+  const campaignMinimumY = couplePhoto ? 1370 : 1030;
+  const bodyMinimumY = couplePhoto ? 1460 : 1180;
+  const detailsMinimumY = couplePhoto ? 1622 : 1440;
+
+  if (couplePhoto) {
+    context.save();
+    context.shadowColor = "rgba(0, 0, 0, 0.34)";
+    context.shadowBlur = 44;
+    context.fillStyle = "rgba(255, 255, 255, 0.16)";
+    roundedRect(context, 250, 430, 580, 500, 58);
+    context.fill();
+    context.restore();
+
+    context.save();
+    roundedRect(context, 268, 448, 544, 464, 46);
+    context.clip();
+    drawCoverImageInRect(context, couplePhoto, 268, 448, 544, 464);
+    context.restore();
+
+    context.strokeStyle = "rgba(255, 232, 183, 0.56)";
+    context.lineWidth = 5;
+    roundedRect(context, 268, 448, 544, 464, 46);
+    context.stroke();
+  }
 
   context.fillStyle = "#ffe8b7";
   context.font = "600 48px Georgia, serif";
-  context.fillText("Nosso par está no sorteio", width / 2, 570);
+  context.fillText("Nosso par está no sorteio", width / 2, titleY);
 
   context.fillStyle = "#ffffff";
-  context.font = "700 108px Georgia, serif";
-  drawWrappedText(
+  context.font = couplePhoto
+    ? "700 84px Georgia, serif"
+    : "700 108px Georgia, serif";
+  const nameBottom = drawWrappedText(
     context,
     `${getFirstTwoNames(student)} e ${getFirstTwoNames(companion)}`,
     width / 2,
-    710,
+    nameY,
     840,
-    116,
+    nameLineHeight,
   );
+  const campaignY = Math.max(campaignMinimumY, nameBottom + 48);
+  const bodyY = Math.max(bodyMinimumY, campaignY + 90);
 
   context.fillStyle = "#ffe8b7";
   context.font = "600 34px Georgia, serif";
-  context.fillText("Dia dos Namorados Dial Fit e Lombardia", width / 2, 1030);
+  context.fillText("Dia dos Namorados Dial Fit e Lombardia", width / 2, campaignY);
 
   context.fillStyle = "rgba(255, 255, 255, 0.86)";
   context.font = "500 34px Arial, sans-serif";
-  drawWrappedText(
+  const bodyBottom = drawWrappedText(
     context,
     "Estamos concorrendo a um jantar especial no Restaurante Lombardia. Torça por nós!",
     width / 2,
-    1180,
+    bodyY,
     790,
     48,
   );
+  const detailsY = Math.max(detailsMinimumY, bodyBottom + 52);
 
   context.fillStyle = "rgba(255, 255, 255, 0.16)";
-  roundedRect(context, 132, 1440, 816, 118, 42);
+  roundedRect(context, 132, detailsY, 816, 118, 42);
   context.fill();
   context.fillStyle = "#ffffff";
   context.font = "700 32px Arial, sans-serif";
-  context.fillText(`${WINNING_COUPLES_COUNT} casais vencedores`, width / 2, 1486);
+  context.fillText(`${WINNING_COUPLES_COUNT} casais vencedores`, width / 2, detailsY + 46);
   context.fillStyle = "rgba(255, 255, 255, 0.82)";
   context.font = "500 28px Arial, sans-serif";
-  context.fillText(`Jantar em ${PRIZE_DINNER_DATE_LABEL}`, width / 2, 1530);
+  context.fillText(`Jantar em ${PRIZE_DINNER_DATE_LABEL}`, width / 2, detailsY + 90);
 
   if (lombardiaLogo) {
-    drawContainImage(context, lombardiaLogo, width / 2, 1626, 340, 150);
+    drawContainImage(
+      context,
+      lombardiaLogo,
+      width / 2,
+      Math.min(detailsY + 190, 1764),
+      340,
+      128,
+    );
   }
 
   const blob = await new Promise<Blob | null>((resolve) =>
@@ -292,8 +355,10 @@ async function downloadParticipationPng(entry: CampaignEntry | null) {
 }
 
 export function ParticipationShareCard({
+  couplePhotoDataUrl,
   entry,
 }: {
+  couplePhotoDataUrl?: string | null;
   entry: CampaignEntry | null;
 }) {
   const [toast, setToast] = useState<ToastState>(null);
@@ -319,7 +384,7 @@ export function ParticipationShareCard({
     });
 
     try {
-      await downloadParticipationPng(entry);
+      await downloadParticipationPng(entry, couplePhotoDataUrl ?? null);
       setToast({
         title: "Story baixado",
         message: "Agora é só abrir o Instagram e postar.",
@@ -357,7 +422,11 @@ export function ParticipationShareCard({
         aria-hidden="true"
       />
 
-      <div className="relative flex min-h-[470px] flex-col justify-between">
+      <div
+        className={`relative flex flex-col justify-between ${
+          couplePhotoDataUrl ? "min-h-[640px]" : "min-h-[470px]"
+        }`}
+      >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/14 px-4 py-2 text-sm font-semibold text-[#ffe7ad] backdrop-blur">
             <Camera size={16} aria-hidden="true" />
@@ -379,7 +448,21 @@ export function ParticipationShareCard({
             <BadgeCheck size={16} aria-hidden="true" />
             Inscrição {entry?.raffleNumber ?? "001"} confirmada
           </div>
-          <p className="font-editorial mt-5 text-2xl text-[#ffe7ad]">
+          {couplePhotoDataUrl ? (
+            <div className="mx-auto mt-5 h-44 w-44 overflow-hidden rounded-[2rem] border border-[#f4d190]/44 bg-white/12 p-1 shadow-2xl shadow-black/24 backdrop-blur sm:h-52 sm:w-52">
+              <div
+                aria-label="Foto do casal"
+                className="h-full w-full rounded-[1.6rem] bg-cover bg-center"
+                role="img"
+                style={{ backgroundImage: `url(${couplePhotoDataUrl})` }}
+              />
+            </div>
+          ) : null}
+          <p
+            className={`font-editorial text-2xl text-[#ffe7ad] ${
+              couplePhotoDataUrl ? "mt-4" : "mt-5"
+            }`}
+          >
             Nosso par está no sorteio
           </p>
           <h2 className="font-display mt-3 text-4xl font-semibold leading-[1.04] sm:text-5xl">

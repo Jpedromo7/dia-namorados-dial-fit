@@ -28,10 +28,12 @@ import { ParticipantsPreview } from "./ParticipantsPreview";
 import { RaffleResultCard } from "./RaffleResultCard";
 
 export function ConfirmationLayer({
+  couplePhotoDataUrl,
   entries,
   latestEntry,
   onRestart,
 }: {
+  couplePhotoDataUrl?: string | null;
   entries: CampaignEntry[];
   latestEntry: CampaignEntry | null;
   onRestart: () => void;
@@ -186,7 +188,10 @@ export function ConfirmationLayer({
           {drawReady ? (
             <RaffleResultCard drawReady={drawReady} winners={raffleWinners} />
           ) : (
-            <ParticipationShareCard entry={latestEntry} />
+            <ParticipationShareCard
+              couplePhotoDataUrl={couplePhotoDataUrl}
+              entry={latestEntry}
+            />
           )}
         </div>
 
