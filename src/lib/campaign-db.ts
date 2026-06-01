@@ -34,7 +34,16 @@ type RaffleResultRow = {
   campaign_entries: CampaignEntryRow | CampaignEntryRow[] | null;
 };
 
+type CampaignEntryDocumentRow = {
+  role: "student" | "companion";
+  campaign_entries: CampaignEntryRow | CampaignEntryRow[] | null;
+};
+
 type CreateEntryResult =
+  | { ok: true; entry: CampaignEntry }
+  | { ok: false; status: number; message: string };
+
+type LookupEntryResult =
   | { ok: true; entry: CampaignEntry }
   | { ok: false; status: number; message: string };
 
@@ -63,6 +72,32 @@ function mapEntryRow(row: CampaignEntryRow): CampaignEntry {
     acceptedTerms: row.accepted_terms as true,
     acceptedTermsAt: row.accepted_terms_at,
     createdAt: row.created_at,
+  };
+}
+
+function getEntryFromJoinedRow(row: CampaignEntryDocumentRow) {
+  const entry = Array.isArray(row.campaign_entries)
+    ? row.campaign_entries[0]
+    : row.campaign_entries;
+
+  return entry ? mapEntryRow(entry) : null;
+}
+
+function sanitizeLookupEntry(
+  entry: CampaignEntry,
+  document: string,
+  role: CampaignEntryDocumentRow["role"],
+) {
+  const normalizedDocument = normalizeDocument(document);
+
+  return {
+    ...entry,
+    studentEmail: "",
+    studentPhone: "",
+    studentDocument: role === "student" ? normalizedDocument : "",
+    companionDocument: role === "companion" ? normalizedDocument : "",
+    companionPhone: "",
+    companionEmail: "",
   };
 }
 
@@ -148,6 +183,86 @@ export async function getAdminCampaignEntries() {
   }
 
   return (data as CampaignEntryRow[]).map(mapEntryRow);
+}
+
+export async function findCampaignEntryByDocument(
+  document: string,
+): Promise<LookupEntryResult> {
+  const normalizedDocument = normalizeDocument(document);
+
+  if (normalizedDocument.length < 6) {
+    return {
+      ok: false,
+      status: 400,
+      message: "Informe um CPF válido para consultar sua inscrição.",
+    };
+  }
+
+  const supabase = createSupabaseAdminClient();
+
+  if (!supabase) {
+    const entry = MOCK_CAMPAIGN_ENTRIES.find(
+      (item) =>
+        normalizeDocument(item.studentDocument) === normalizedDocument ||
+        normalizeDocument(item.companionDocument) === normalizedDocument,
+    );
+
+    if (!entry) {
+      return {
+        ok: false,
+        status: 404,
+        message: "Não encontramos inscrição com esse CPF.",
+      };
+    }
+
+    const role =
+      normalizeDocument(entry.studentDocument) === normalizedDocument
+        ? "student"
+        : "companion";
+
+    return {
+      ok: true,
+      entry: sanitizeLookupEntry(entry, normalizedDocument, role),
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("campaign_entry_documents")
+    .select("role,campaign_entries(*)")
+    .eq("document_normalized", normalizedDocument)
+    .maybeSingle();
+
+  if (error) {
+    return {
+      ok: false,
+      status: 500,
+      message: "Não foi possível consultar sua inscrição agora.",
+    };
+  }
+
+  if (!data) {
+    return {
+      ok: false,
+      status: 404,
+      message: "Não encontramos inscrição com esse CPF.",
+    };
+  }
+
+  const documentRow = data as CampaignEntryDocumentRow;
+  const entry = getEntryFromJoinedRow(documentRow);
+
+  if (!entry) {
+    return {
+      ok: false,
+      status: 404,
+      message: "Não encontramos inscrição com esse CPF.",
+    };
+  }
+
+  return {
+    ok: true,
+    entry: sanitizeLookupEntry(entry, normalizedDocument, documentRow.role),
+  };
 }
 
 export async function createCampaignEntry(

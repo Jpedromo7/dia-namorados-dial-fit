@@ -5,10 +5,12 @@ import {
   Check,
   Heart,
   Info,
+  Loader2,
+  Search,
   Trophy,
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import {
   CAMPAIGN_COMPLEMENT,
   CAMPAIGN_SUBTITLE,
@@ -28,14 +30,44 @@ const howItWorks = [
 
 export function PresentationLayer({
   hasStoredRegistration,
+  onLookupRegistration,
   onResume,
   onStart,
 }: {
   hasStoredRegistration: boolean;
+  onLookupRegistration: (document: string) => Promise<void> | void;
   onResume: () => void;
   onStart: () => void;
 }) {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [showLookup, setShowLookup] = useState(false);
+  const [lookupDocument, setLookupDocument] = useState("");
+  const [lookupError, setLookupError] = useState("");
+  const [isLookingUp, setIsLookingUp] = useState(false);
+
+  async function handleLookupSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (lookupDocument.trim().length < 6) {
+      setLookupError("Digite o CPF usado na inscrição.");
+      return;
+    }
+
+    setIsLookingUp(true);
+    setLookupError("");
+
+    try {
+      await onLookupRegistration(lookupDocument);
+    } catch (error) {
+      setLookupError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível encontrar sua inscrição.",
+      );
+    } finally {
+      setIsLookingUp(false);
+    }
+  }
 
   return (
     <section className="relative isolate min-h-screen overflow-hidden bg-[#fff5ef] px-5 pb-8 pt-24 sm:px-6 lg:pt-[6.5rem]">
@@ -100,6 +132,17 @@ export function PresentationLayer({
                   <Info size={18} aria-hidden="true" />
                   Ver como funciona
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLookup((current) => !current);
+                    setLookupError("");
+                  }}
+                  className="inline-flex min-h-[3.35rem] items-center justify-center gap-2 rounded-full border border-[#7d2237]/20 bg-white/72 px-7 py-4 text-sm font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/8 backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:border-[#7d2237]/34 hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#d8b55e] focus:ring-offset-2"
+                >
+                  <Search size={18} aria-hidden="true" />
+                  Já me cadastrei
+                </button>
                 {hasStoredRegistration ? (
                   <button
                     type="button"
@@ -111,6 +154,57 @@ export function PresentationLayer({
                   </button>
                 ) : null}
               </div>
+
+              {showLookup ? (
+                <form
+                  noValidate
+                  onSubmit={handleLookupSubmit}
+                  className="mt-4 max-w-xl rounded-[1.4rem] border border-white/70 bg-white/68 p-4 shadow-lg shadow-[#5b1224]/10 backdrop-blur-xl"
+                >
+                  <label className="block">
+                    <span className="text-sm font-semibold text-[#5b1224]">
+                      Acesse sua inscrição pelo CPF
+                    </span>
+                    <span className="mt-1 block text-xs leading-5 text-[#7a5f67]">
+                      Digite o CPF do aluno ou do acompanhante para abrir a
+                      página de confirmação.
+                    </span>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={lookupDocument}
+                        placeholder="000.000.000-00"
+                        onChange={(event) =>
+                          setLookupDocument(event.target.value)
+                        }
+                        className="h-12 min-w-0 rounded-full border border-[#ead0d6] bg-white/90 px-4 text-sm text-[#24191c] outline-none transition duration-300 placeholder:text-[#a98d95] hover:border-[#d8aeb8] focus:border-[#0e8b4a] focus:ring-2 focus:ring-[#0e8b4a]/16"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isLookingUp}
+                        className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0e8b4a] px-6 text-sm font-semibold text-white shadow-lg shadow-[#0e8b4a]/18 transition duration-300 hover:-translate-y-0.5 hover:bg-[#0b723e] disabled:cursor-wait disabled:bg-[#9db9a9] disabled:hover:translate-y-0"
+                      >
+                        {isLookingUp ? (
+                          <Loader2
+                            className="animate-spin"
+                            size={17}
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <Search size={17} aria-hidden="true" />
+                        )}
+                        Abrir confirmação
+                      </button>
+                    </div>
+                  </label>
+                  {lookupError ? (
+                    <p className="mt-3 text-sm font-semibold text-[#a4213d]">
+                      {lookupError}
+                    </p>
+                  ) : null}
+                </form>
+              ) : null}
 
               <div className="mt-6 grid max-w-2xl gap-3 sm:grid-cols-3">
                 {[

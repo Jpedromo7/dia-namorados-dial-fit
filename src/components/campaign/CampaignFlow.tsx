@@ -220,6 +220,30 @@ export function CampaignFlow({
     showEntryConfirmation(entry);
   }
 
+  async function handleLookupRegistration(document: string) {
+    const response = await fetch("/api/campaign/entries/lookup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ document }),
+    });
+
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+
+      throw new Error(
+        data?.message ?? "Não foi possível encontrar sua inscrição.",
+      );
+    }
+
+    const { entry } = (await response.json()) as { entry: CampaignEntry };
+
+    showEntryConfirmation(entry);
+  }
+
   function startRegistration() {
     setCelebrationKey((current) => current + 1);
     setCurrentStep("registration");
@@ -262,6 +286,7 @@ export function CampaignFlow({
         {currentStep === "presentation" ? (
           <PresentationLayer
             hasStoredRegistration={Boolean(resumableEntry)}
+            onLookupRegistration={handleLookupRegistration}
             onResume={resumeStoredRegistration}
             onStart={startRegistration}
           />
