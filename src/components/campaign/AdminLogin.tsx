@@ -1,13 +1,46 @@
 "use client";
 
-import { Mail, Send } from "lucide-react";
+import { LogIn, Mail, Send } from "lucide-react";
 import { useState } from "react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function AdminLogin() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isGoogleOpening, setIsGoogleOpening] = useState(false);
+
+  async function signInWithGoogle() {
+    setMessage("");
+    setError("");
+    setIsGoogleOpening(true);
+
+    const supabase = createSupabaseBrowserClient();
+
+    if (!supabase) {
+      setIsGoogleOpening(false);
+      setError("Login com Google não configurado.");
+      return;
+    }
+
+    const { error: googleError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/admin")}`,
+        queryParams: {
+          prompt: "select_account",
+        },
+      },
+    });
+
+    if (googleError) {
+      setIsGoogleOpening(false);
+      setError(
+        "Não foi possível abrir o login com Google. Confira o provedor no Supabase.",
+      );
+    }
+  }
 
   async function sendMagicLink(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -41,34 +74,52 @@ export function AdminLogin() {
   }
 
   return (
-    <form onSubmit={sendMagicLink} className="mx-auto grid max-w-sm gap-3 text-left">
-      <label className="grid gap-2 text-sm font-semibold text-[#4e3039]">
-        E-mail autorizado
-        <span className="relative">
-          <Mail
-            size={18}
-            aria-hidden="true"
-            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#a4213d]"
-          />
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="seuemail@exemplo.com"
-            required
-            className="campaign-field h-12 w-full pl-11 pr-4 text-sm font-medium"
-          />
-        </span>
-      </label>
-
+    <div className="mx-auto grid max-w-sm gap-4 text-left">
       <button
-        type="submit"
-        disabled={isSending}
-        className="campaign-button inline-flex h-12 items-center justify-center gap-2 bg-[#0e8b4a] px-6 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        type="button"
+        onClick={signInWithGoogle}
+        disabled={isGoogleOpening}
+        className="campaign-button inline-flex h-12 items-center justify-center gap-2 bg-white px-6 text-sm font-semibold text-[#3b111c] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <Send size={18} aria-hidden="true" />
-        {isSending ? "Enviando acesso..." : "Enviar link de acesso"}
+        <LogIn size={18} aria-hidden="true" />
+        {isGoogleOpening ? "Abrindo Google..." : "Entrar com Google"}
       </button>
+
+      <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a7078]">
+        <span className="h-px flex-1 bg-[#ead0d6]" />
+        ou
+        <span className="h-px flex-1 bg-[#ead0d6]" />
+      </div>
+
+      <form onSubmit={sendMagicLink} className="grid gap-3">
+        <label className="grid gap-2 text-sm font-semibold text-[#4e3039]">
+          E-mail autorizado
+          <span className="relative">
+            <Mail
+              size={18}
+              aria-hidden="true"
+              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#a4213d]"
+            />
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="seuemail@exemplo.com"
+              required
+              className="campaign-field h-12 w-full pl-11 pr-4 text-sm font-medium"
+            />
+          </span>
+        </label>
+
+        <button
+          type="submit"
+          disabled={isSending}
+          className="campaign-button inline-flex h-12 items-center justify-center gap-2 bg-[#0e8b4a] px-6 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Send size={18} aria-hidden="true" />
+          {isSending ? "Enviando acesso..." : "Enviar link de acesso"}
+        </button>
+      </form>
 
       {message ? (
         <p className="campaign-frame-soft bg-[#effaf3] px-4 py-3 text-center text-sm font-semibold text-[#0e8b4a]">
@@ -81,6 +132,6 @@ export function AdminLogin() {
           {error}
         </p>
       ) : null}
-    </form>
+    </div>
   );
 }
