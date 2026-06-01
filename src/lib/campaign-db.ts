@@ -35,6 +35,11 @@ type CampaignEntryRow = {
   created_at: string;
 };
 
+type CampaignEntryIndexRow = Pick<CampaignEntryRow, "id" | "raffle_number">;
+type SupabaseAdminClient = NonNullable<
+  ReturnType<typeof createSupabaseAdminClient>
+>;
+
 type RaffleResultRow = {
   position: number;
   campaign_entries: CampaignEntryRow | CampaignEntryRow[] | null;
@@ -81,10 +86,13 @@ function redactPublicEntry(entry: CampaignEntry): CampaignEntry {
   };
 }
 
-function mapEntryRow(row: CampaignEntryRow): CampaignEntry {
+function mapEntryRow(
+  row: CampaignEntryRow,
+  raffleNumber = formatRaffleNumber(row.raffle_number),
+): CampaignEntry {
   return {
     id: row.id,
-    raffleNumber: formatRaffleNumber(row.raffle_number),
+    raffleNumber,
     studentName: row.student_name,
     studentEmail: row.student_email,
     studentPhone: row.student_phone,
@@ -101,6 +109,46 @@ function mapEntryRow(row: CampaignEntryRow): CampaignEntry {
     acceptedTermsAt: row.accepted_terms_at,
     createdAt: row.created_at,
   };
+}
+
+function mapEntryRows(rows: CampaignEntryRow[]) {
+  return [...rows]
+    .sort((first, second) => first.raffle_number - second.raffle_number)
+    .map((row, index) => mapEntryRow(row, formatRaffleNumber(index + 1)));
+}
+
+async function getCurrentRaffleNumberById(supabase: SupabaseAdminClient) {
+  const { data, error } = await supabase
+    .from("campaign_entries")
+    .select("id,raffle_number")
+    .order("raffle_number", { ascending: true });
+
+  if (error || !data) {
+    return new Map<string, string>();
+  }
+
+  return new Map(
+    (data as CampaignEntryIndexRow[]).map((row, index) => [
+      row.id,
+      formatRaffleNumber(index + 1),
+    ]),
+  );
+}
+
+async function applyCurrentRaffleNumbers(
+  supabase: SupabaseAdminClient,
+  entries: CampaignEntry[],
+) {
+  if (entries.length === 0) {
+    return entries;
+  }
+
+  const raffleNumberById = await getCurrentRaffleNumberById(supabase);
+
+  return entries.map((entry) => ({
+    ...entry,
+    raffleNumber: raffleNumberById.get(entry.id) ?? entry.raffleNumber,
+  }));
 }
 
 function getEntryFromJoinedRow(row: CampaignEntryDocumentRow) {
@@ -326,10 +374,10 @@ export async function getPublicCampaignEntries() {
     .order("raffle_number", { ascending: true });
 
   if (error || !data) {
-    return MOCK_CAMPAIGN_ENTRIES;
+    return isDemoMode() ? MOCK_CAMPAIGN_ENTRIES.map(redactPublicEntry) : [];
   }
 
-  return (data as CampaignEntryRow[]).map(mapEntryRow).map(redactPublicEntry);
+  return mapEntryRows(data as CampaignEntryRow[]).map(redactPublicEntry);
 }
 
 export async function getAdminCampaignEntries() {
@@ -352,7 +400,7 @@ export async function getAdminCampaignEntries() {
     throw new Error(error?.message ?? "Não foi possível carregar inscritos.");
   }
 
-  return (data as CampaignEntryRow[]).map(mapEntryRow);
+  return mapEntryRows(data as CampaignEntryRow[]);
 }
 
 export async function findCampaignEntryByDocument(
@@ -437,9 +485,18 @@ export async function findCampaignEntryByDocument(
     };
   }
 
+  const [entryWithCurrentRaffleNumber] = await applyCurrentRaffleNumbers(
+    supabase,
+    [entry],
+  );
+
   return {
     ok: true,
-    entry: sanitizeLookupEntry(entry, normalizedDocument, documentRow.role),
+    entry: sanitizeLookupEntry(
+      entryWithCurrentRaffleNumber ?? entry,
+      normalizedDocument,
+      documentRow.role,
+    ),
   };
 }
 
@@ -516,7 +573,15 @@ export async function createCampaignEntry(
     };
   }
 
-  return { ok: true, entry: mapEntryRow(data as CampaignEntryRow) };
+  const [entryWithCurrentRaffleNumber] = await applyCurrentRaffleNumbers(
+    supabase,
+    [mapEntryRow(data as CampaignEntryRow)],
+  );
+
+  return {
+    ok: true,
+    entry: entryWithCurrentRaffleNumber ?? mapEntryRow(data as CampaignEntryRow),
+  };
 }
 
 export async function updateCampaignEntryStatus(
@@ -634,9 +699,11 @@ export async function getRaffleWinners() {
     return [];
   }
 
-  return (data as RaffleResultRow[])
+  const winners = (data as RaffleResultRow[])
     .map(getRaffleEntryFromResult)
     .filter((entry): entry is CampaignEntry => Boolean(entry));
+
+  return applyCurrentRaffleNumbers(supabase, winners);
 }
 
 export async function drawCampaignWinners(adminEmail: string) {
@@ -700,5 +767,8 @@ export async function drawCampaignWinners(adminEmail: string) {
     throw new Error("Não foi possível salvar o resultado do sorteio.");
   }
 
-  return selectedEntries.map(mapEntryRow);
+  return applyCurrentRaffleNumbers(
+    supabase,
+    selectedEntries.map((entry) => mapEntryRow(entry)),
+  );
 }
