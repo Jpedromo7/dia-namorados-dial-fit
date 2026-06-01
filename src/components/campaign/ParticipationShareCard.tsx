@@ -217,19 +217,6 @@ async function downloadParticipationPng(
   context.arc(160, 1520, 260, 0, Math.PI * 2);
   context.fill();
 
-  context.save();
-  context.shadowColor = "rgba(244, 209, 144, 0.28)";
-  context.shadowBlur = 44;
-  context.fillStyle = "rgba(255, 255, 255, 0.12)";
-  roundedRect(context, 70, 86, width - 140, height - 172, 70);
-  context.fill();
-  context.restore();
-
-  context.strokeStyle = "rgba(244, 209, 144, 0.36)";
-  context.lineWidth = 3;
-  roundedRect(context, 70, 86, width - 140, height - 172, 70);
-  context.stroke();
-
   const [dialfitLogo, lombardiaLogo, couplePhoto] = await Promise.all([
     loadCanvasImage(DIALFIT_LOGO).catch(() => null),
     loadCanvasImage(LOMBARDIA_LOGO).catch(() => null),
@@ -243,12 +230,13 @@ async function downloadParticipationPng(
   }
 
   context.textAlign = "center";
-  context.fillStyle = "rgba(255, 255, 255, 0.16)";
-  roundedRect(context, 326, 330, 428, 72, 36);
-  context.fill();
+  context.save();
+  context.shadowColor = "rgba(0, 0, 0, 0.42)";
+  context.shadowBlur = 18;
   context.fillStyle = "#ffe8b7";
   context.font = "700 30px Arial, sans-serif";
   context.fillText(`Inscrição #${entry?.raffleNumber ?? "001"} confirmada`, width / 2, 376);
+  context.restore();
 
   const student = entry?.studentName ?? "Nome do aluno";
   const companion = entry?.companionName ?? "Nome do acompanhante";
@@ -261,21 +249,13 @@ async function downloadParticipationPng(
 
   if (couplePhoto) {
     context.save();
-    context.shadowColor = "rgba(0, 0, 0, 0.34)";
-    context.shadowBlur = 44;
-    context.fillStyle = "rgba(255, 255, 255, 0.16)";
-    roundedRect(context, 250, 430, 580, 500, 58);
-    context.fill();
-    context.restore();
-
-    context.save();
     roundedRect(context, 268, 448, 544, 464, 46);
     context.clip();
     drawCoverImageInRect(context, couplePhoto, 268, 448, 544, 464);
     context.restore();
 
-    context.strokeStyle = "rgba(255, 232, 183, 0.56)";
-    context.lineWidth = 5;
+    context.strokeStyle = "rgba(255, 232, 183, 0.3)";
+    context.lineWidth = 3;
     roundedRect(context, 268, 448, 544, 464, 46);
     context.stroke();
   }
@@ -315,15 +295,16 @@ async function downloadParticipationPng(
   );
   const detailsY = Math.max(detailsMinimumY, bodyBottom + 52);
 
-  context.fillStyle = "rgba(255, 255, 255, 0.16)";
-  roundedRect(context, 132, detailsY, 816, 118, 42);
-  context.fill();
+  context.save();
+  context.shadowColor = "rgba(0, 0, 0, 0.44)";
+  context.shadowBlur = 18;
   context.fillStyle = "#ffffff";
   context.font = "700 32px Arial, sans-serif";
   context.fillText(`${WINNING_COUPLES_COUNT} casais vencedores`, width / 2, detailsY + 46);
   context.fillStyle = "rgba(255, 255, 255, 0.82)";
   context.font = "500 28px Arial, sans-serif";
   context.fillText(`Jantar em ${PRIZE_DINNER_DATE_LABEL}`, width / 2, detailsY + 90);
+  context.restore();
 
   if (lombardiaLogo) {
     drawContainImage(
@@ -400,7 +381,7 @@ export function ParticipationShareCard({
   }
 
   return (
-    <section className="campaign-frame-gold relative isolate overflow-hidden bg-[#3b111c] p-5 text-white sm:p-6">
+    <section className="relative isolate overflow-hidden rounded-lg bg-[#3b111c] p-5 text-white sm:p-6">
       <Image
         src={LOMBARDIA_FACADE_IMAGE}
         alt=""
@@ -442,15 +423,15 @@ export function ParticipationShareCard({
         </div>
 
         <div className="mx-auto max-w-xl text-center">
-          <div className="mx-auto inline-flex items-center gap-2 rounded-md border border-[#f4d190]/26 bg-white/12 px-4 py-2 text-sm font-semibold text-[#ffe7ad] backdrop-blur">
+          <div className="mx-auto inline-flex items-center gap-2 text-sm font-semibold text-[#ffe7ad] [text-shadow:0_2px_12px_rgba(0,0,0,0.45)]">
             <BadgeCheck size={16} aria-hidden="true" />
             Inscrição {entry?.raffleNumber ?? "001"} confirmada
           </div>
           {couplePhotoDataUrl ? (
-            <div className="mx-auto mt-5 h-44 w-44 overflow-hidden rounded-lg border-2 border-[#f4d190]/44 bg-white/12 p-1 shadow-[6px_6px_0_rgba(0,0,0,0.42)] backdrop-blur sm:h-52 sm:w-52">
+            <div className="mx-auto mt-5 h-44 w-44 overflow-hidden rounded-lg border border-[#f4d190]/30 shadow-[0_18px_42px_rgba(0,0,0,0.36)] sm:h-52 sm:w-52">
               <div
                 aria-label="Foto do casal"
-                className="h-full w-full rounded-md bg-cover bg-center"
+                className="h-full w-full bg-cover bg-center"
                 role="img"
                 style={{ backgroundImage: `url(${couplePhotoDataUrl})` }}
               />
