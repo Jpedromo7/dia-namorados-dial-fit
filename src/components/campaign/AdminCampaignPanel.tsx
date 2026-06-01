@@ -11,12 +11,10 @@ import {
   XCircle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { CAMPAIGN_UNITS } from "@/config/campaign";
 import { entriesToCsv, normalizeDocument } from "@/lib/campaign";
-import type { CampaignEntry, CampaignUnit, EntryStatus } from "@/types/campaign";
+import type { CampaignEntry, EntryStatus } from "@/types/campaign";
 import { RaffleDraw } from "./RaffleDraw";
 
-type UnitFilter = "Todas" | CampaignUnit;
 type StatusFilter = "Todos" | EntryStatus;
 type FeedbackMessage = { text: string; tone: "success" | "error" };
 
@@ -143,7 +141,6 @@ export function AdminCampaignPanel({
   persistChanges?: boolean;
 }) {
   const [entries, setEntries] = useState<CampaignEntry[]>(initialEntries);
-  const [unitFilter, setUnitFilter] = useState<UnitFilter>("Todas");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Todos");
   const [statusMessage, setStatusMessage] = useState<FeedbackMessage | null>(
     null,
@@ -152,13 +149,12 @@ export function AdminCampaignPanel({
 
   const filteredEntries = useMemo(() => {
     return entries.filter((entry) => {
-      const unitMatches = unitFilter === "Todas" || entry.unit === unitFilter;
       const statusMatches =
         statusFilter === "Todos" || entry.status === statusFilter;
 
-      return unitMatches && statusMatches;
+      return statusMatches;
     });
-  }, [entries, statusFilter, unitFilter]);
+  }, [entries, statusFilter]);
 
   const validatedTotal = entries.filter(
     (entry) => entry.status === "Validado",
@@ -379,23 +375,6 @@ export function AdminCampaignPanel({
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
-          {(["Todas", ...CAMPAIGN_UNITS] as UnitFilter[]).map((unit) => (
-            <button
-              key={unit}
-              type="button"
-              onClick={() => setUnitFilter(unit)}
-              className={`h-10 rounded-md border-2 px-4 text-sm font-semibold transition ${
-                unitFilter === unit
-                  ? "border-[#0e8b4a] bg-[#0e8b4a] text-white"
-                  : "border-[#ead0d6] bg-white/80 text-[#6f555d] hover:border-[#0e8b4a]/40"
-              }`}
-            >
-              {unit}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-2">
           {(["Todos", ...STATUS_OPTIONS] as StatusFilter[]).map((status) => (
             <button
               key={status}
@@ -413,7 +392,7 @@ export function AdminCampaignPanel({
         </div>
 
         <div className="mt-6 overflow-x-auto rounded-lg border-2 border-[#3b111c]">
-          <table className="min-w-[1280px] w-full border-collapse text-left text-sm">
+          <table className="min-w-[1160px] w-full border-collapse text-left text-sm">
             <thead className="bg-[#fff6f1] text-[#6f555d]">
               <tr>
                 <th className="px-4 py-3 font-semibold">Nº</th>
@@ -422,7 +401,6 @@ export function AdminCampaignPanel({
                 <th className="px-4 py-3 font-semibold">Acompanhante</th>
                 <th className="px-4 py-3 font-semibold">CPF acompanhante</th>
                 <th className="px-4 py-3 font-semibold">Avaliação</th>
-                <th className="px-4 py-3 font-semibold">Unidade</th>
                 <th className="px-4 py-3 font-semibold">Criado em</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
                 <th className="px-4 py-3 font-semibold">Ações</th>
@@ -455,12 +433,9 @@ export function AdminCampaignPanel({
                   </td>
                   <td className="px-4 py-3">
                     <span className="inline-flex rounded-full border border-[#bfe8ce] bg-[#effaf3] px-3 py-1 text-xs font-semibold text-[#0e8b4a]">
-                      {entry.completedReview
-                        ? `Confirmada · ${entry.reviewUnit}`
-                        : "Pendente"}
+                      {entry.completedReview ? "Confirmada" : "Pendente"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[#6f555d]">{entry.unit}</td>
                   <td className="px-4 py-3 text-[#6f555d]">
                     {formatDateTime(entry.createdAt)}
                   </td>

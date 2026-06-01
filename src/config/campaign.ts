@@ -24,12 +24,10 @@ export const PRIZE_DINNER_DATE_LABEL = "18 de junho de 2026";
 
 export const DIAL_FIT_GOOGLE_REVIEW_URL =
   "https://www.google.com/maps/search/?api=1&query=Dial%20Fit%20Academia";
-export const DIAL_BEACH_GOOGLE_REVIEW_URL =
-  "https://www.google.com/maps/search/?api=1&query=Dial%20Beach%20Academia";
 export const CAMPAIGN_RULES_URL =
   "/campanha-namorados/regulamento-dia-dos-namorados-dial-fit.pdf";
 
-export const CAMPAIGN_UNITS = ["Dial Fit", "Dial Beach"] as const;
+export const CAMPAIGN_UNITS = ["Dial Fit"] as const;
 
 /*
 Banco de dados futuro sugerido para Supabase:

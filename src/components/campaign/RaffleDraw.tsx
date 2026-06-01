@@ -129,7 +129,6 @@ export function RaffleDraw({
           "",
           formatWinnerLine(winner, index),
           `Inscrição: ${winner.raffleNumber}`,
-          `Unidade: ${winner.unit}`,
         ]),
       ].join("\n"),
     );
@@ -227,7 +226,7 @@ export function RaffleDraw({
                       {winner.studentName} + {winner.companionName}
                     </h3>
                     <p className="mt-2 text-sm text-[#6f555d]">
-                      Inscrição {winner.raffleNumber} · {winner.unit}
+                      Inscrição {winner.raffleNumber}
                     </p>
                   </article>
                 ))}

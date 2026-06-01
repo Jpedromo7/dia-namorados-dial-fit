@@ -1,28 +1,10 @@
 "use client";
 
 import { CheckCircle2, ExternalLink, Heart, Star } from "lucide-react";
-import {
-  DIAL_BEACH_GOOGLE_REVIEW_URL,
-  DIAL_FIT_GOOGLE_REVIEW_URL,
-} from "@/config/campaign";
+import { DIAL_FIT_GOOGLE_REVIEW_URL } from "@/config/campaign";
 import type { CampaignUnit } from "@/types/campaign";
 
-const reviewTargets: Array<{
-  unit: CampaignUnit;
-  href: string;
-  label: string;
-}> = [
-  {
-    unit: "Dial Fit",
-    href: DIAL_FIT_GOOGLE_REVIEW_URL,
-    label: "Dial Fit",
-  },
-  {
-    unit: "Dial Beach",
-    href: DIAL_BEACH_GOOGLE_REVIEW_URL,
-    label: "Dial Beach",
-  },
-];
+const DIAL_FIT_UNIT: CampaignUnit = "Dial Fit";
 
 export function ReviewUnitsSection({
   reviewedUnit,
@@ -49,7 +31,7 @@ export function ReviewUnitsSection({
           </h3>
           <p className="mt-1 text-sm leading-6 text-[#795f66]">
             Sua avaliação faz parte da inscrição e ajuda outras pessoas a
-            conhecerem nossas unidades.
+            conhecerem a Dial Fit.
           </p>
         </div>
       </div>
@@ -68,43 +50,34 @@ export function ReviewUnitsSection({
             </span>
             <div>
               <h4 className="text-sm font-semibold text-[#4e3039]">
-                Escolha uma unidade para avaliar no Google
+                Avalie a Dial Fit no Google
               </h4>
               <p className="mt-1 text-xs font-medium text-[#795f66]">
-                Os links abrem o Google Maps em uma nova aba.
+                O link abre o Google Maps em uma nova aba.
               </p>
               {reviewedUnit ? (
                 <p className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#0e8b4a]">
                   <CheckCircle2 size={13} aria-hidden="true" />
-                  {reviewedUnit} aberta para avaliação
+                  Avaliação aberta
                 </p>
               ) : null}
             </div>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 lg:min-w-[360px]">
-            {reviewTargets.map((target) => {
-              const selected = reviewedUnit === target.unit;
-
-              return (
-                <a
-                  key={target.unit}
-                  href={target.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => onReviewOpened(target.unit)}
-                  className={`campaign-button inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap px-5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0e8b4a] focus:ring-offset-2 ${
-                    selected
-                      ? "bg-[#0e8b4a] text-white"
-                      : "bg-white text-[#0e8b4a] hover:bg-[#f7fbf6]"
-                  }`}
-                >
-                  Avaliar {target.label}
-                  <ExternalLink size={14} aria-hidden="true" />
-                </a>
-              );
-            })}
-          </div>
+          <a
+            href={DIAL_FIT_GOOGLE_REVIEW_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => onReviewOpened(DIAL_FIT_UNIT)}
+            className={`campaign-button inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap px-5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0e8b4a] focus:ring-offset-2 ${
+              reviewedUnit
+                ? "bg-[#0e8b4a] text-white"
+                : "bg-white text-[#0e8b4a] hover:bg-[#f7fbf6]"
+            }`}
+          >
+            Avaliar no Google Maps
+            <ExternalLink size={14} aria-hidden="true" />
+          </a>
         </div>
       </article>
 
@@ -127,11 +100,6 @@ export function ReviewUnitsSection({
           Confirmo que abri o Google Maps e deixei minha avaliação para concluir
           a inscrição.
           <span className="font-semibold text-[#a4213d]"> *</span>
-          {reviewedUnit ? (
-            <span className="mt-1 block text-xs font-semibold text-[#0e8b4a]">
-              Unidade selecionada: {reviewedUnit}
-            </span>
-          ) : null}
         </span>
       </label>
 
