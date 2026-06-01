@@ -71,6 +71,7 @@ const REQUIRED_FIELDS: FormField[] = [
 ];
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DOCUMENT_TAKEN_MESSAGE = "Este CPF já está cadastrado na campanha.";
 
 const buttonHearts = [
   { left: "18%", delay: "0ms", x: "-12px" },
@@ -154,13 +155,41 @@ function TextField({
   );
 }
 
+function StoredRegistrationHint({
+  document,
+  onShowStoredRegistration,
+}: {
+  document: string;
+  onShowStoredRegistration: (document: string) => void;
+}) {
+  return (
+    <div className="mt-3 rounded-[1rem] border border-[#0e8b4a]/18 bg-[#f4fbf6] p-3 text-sm text-[#315143]">
+      <p className="font-medium">
+        Encontramos uma inscrição salva neste aparelho.
+      </p>
+      <button
+        type="button"
+        onClick={() => onShowStoredRegistration(document)}
+        className="mt-2 inline-flex items-center gap-2 rounded-full bg-[#0e8b4a] px-4 py-2 text-xs font-semibold text-white shadow-sm shadow-[#0e8b4a]/14 transition duration-300 hover:-translate-y-0.5 hover:bg-[#0b723e]"
+      >
+        <Check size={14} aria-hidden="true" />
+        Ver minha inscrição
+      </button>
+    </div>
+  );
+}
+
 export function RegistrationLayer({
+  canShowStoredRegistration,
   onBack,
   onRegister,
+  onShowStoredRegistration,
   takenDocuments,
 }: {
+  canShowStoredRegistration: (document: string) => boolean;
   onBack: () => void;
   onRegister: (payload: RegistrationPayload) => Promise<void> | void;
+  onShowStoredRegistration: (document: string) => void;
   takenDocuments: string[];
 }) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -206,11 +235,11 @@ export function RegistrationLayer({
     const companionDocument = normalizeDocument(form.companionDocument);
 
     if (studentDocument && takenDocumentSet.has(studentDocument)) {
-      errors.studentDocument = "Este CPF já está cadastrado na campanha.";
+      errors.studentDocument = DOCUMENT_TAKEN_MESSAGE;
     }
 
     if (companionDocument && takenDocumentSet.has(companionDocument)) {
-      errors.companionDocument = "Este CPF já está cadastrado na campanha.";
+      errors.companionDocument = DOCUMENT_TAKEN_MESSAGE;
     }
 
     if (
@@ -235,6 +264,12 @@ export function RegistrationLayer({
   const hasDocumentErrors =
     Boolean(fieldErrors.studentDocument) ||
     Boolean(fieldErrors.companionDocument);
+  const canResumeStudentRegistration =
+    fieldErrors.studentDocument === DOCUMENT_TAKEN_MESSAGE &&
+    canShowStoredRegistration(form.studentDocument);
+  const canResumeCompanionRegistration =
+    fieldErrors.companionDocument === DOCUMENT_TAKEN_MESSAGE &&
+    canShowStoredRegistration(form.companionDocument);
   const reviewIsComplete = Boolean(reviewedUnit) && reviewConfirmed;
   const formIsReady =
     requiredFieldsComplete &&
@@ -385,19 +420,27 @@ export function RegistrationLayer({
                     }
                     onChange={updateField}
                   />
-                  <TextField
-                    label="CPF do aluno"
-                    name="studentDocument"
-                    value={form.studentDocument}
-                    required
-                    placeholder="CPF do aluno"
-                    error={
-                      attemptedSubmit || form.studentDocument
-                        ? fieldErrors.studentDocument
-                        : undefined
-                    }
-                    onChange={updateField}
-                  />
+                  <div>
+                    <TextField
+                      label="CPF do aluno"
+                      name="studentDocument"
+                      value={form.studentDocument}
+                      required
+                      placeholder="CPF do aluno"
+                      error={
+                        attemptedSubmit || form.studentDocument
+                          ? fieldErrors.studentDocument
+                          : undefined
+                      }
+                      onChange={updateField}
+                    />
+                    {canResumeStudentRegistration ? (
+                      <StoredRegistrationHint
+                        document={form.studentDocument}
+                        onShowStoredRegistration={onShowStoredRegistration}
+                      />
+                    ) : null}
+                  </div>
                 </div>
                 <p className="text-xs font-medium leading-5 text-[#7a5f67]">
                   Cada CPF pode aparecer em apenas uma inscrição da campanha.
@@ -424,19 +467,27 @@ export function RegistrationLayer({
                     }
                     onChange={updateField}
                   />
-                  <TextField
-                    label="CPF do acompanhante"
-                    name="companionDocument"
-                    value={form.companionDocument}
-                    required
-                    placeholder="CPF do acompanhante"
-                    error={
-                      attemptedSubmit || form.companionDocument
-                        ? fieldErrors.companionDocument
-                        : undefined
-                    }
-                    onChange={updateField}
-                  />
+                  <div>
+                    <TextField
+                      label="CPF do acompanhante"
+                      name="companionDocument"
+                      value={form.companionDocument}
+                      required
+                      placeholder="CPF do acompanhante"
+                      error={
+                        attemptedSubmit || form.companionDocument
+                          ? fieldErrors.companionDocument
+                          : undefined
+                      }
+                      onChange={updateField}
+                    />
+                    {canResumeCompanionRegistration ? (
+                      <StoredRegistrationHint
+                        document={form.companionDocument}
+                        onShowStoredRegistration={onShowStoredRegistration}
+                      />
+                    ) : null}
+                  </div>
                   <TextField
                     label="WhatsApp do acompanhante"
                     name="companionPhone"

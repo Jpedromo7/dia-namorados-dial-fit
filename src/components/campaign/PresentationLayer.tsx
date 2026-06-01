@@ -26,7 +26,15 @@ const howItWorks = [
   "Acompanhe a confirmação e aguarde o sorteio especial.",
 ];
 
-export function PresentationLayer({ onStart }: { onStart: () => void }) {
+export function PresentationLayer({
+  hasStoredRegistration,
+  onResume,
+  onStart,
+}: {
+  hasStoredRegistration: boolean;
+  onResume: () => void;
+  onStart: () => void;
+}) {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   return (
@@ -92,6 +100,16 @@ export function PresentationLayer({ onStart }: { onStart: () => void }) {
                   <Info size={18} aria-hidden="true" />
                   Ver como funciona
                 </button>
+                {hasStoredRegistration ? (
+                  <button
+                    type="button"
+                    onClick={onResume}
+                    className="inline-flex min-h-[3.35rem] items-center justify-center gap-2 rounded-full border border-[#0e8b4a]/22 bg-white/80 px-7 py-4 text-sm font-semibold text-[#0b723e] shadow-sm shadow-[#0e8b4a]/10 backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:border-[#0e8b4a]/38 hover:bg-[#f7fbf6] focus:outline-none focus:ring-2 focus:ring-[#0e8b4a] focus:ring-offset-2"
+                  >
+                    <Check size={18} aria-hidden="true" />
+                    Ver minha inscrição
+                  </button>
+                ) : null}
               </div>
 
               <div className="mt-6 grid max-w-2xl gap-3 sm:grid-cols-3">
