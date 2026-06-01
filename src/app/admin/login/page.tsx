@@ -17,7 +17,24 @@ export const metadata: Metadata = {
   title: "Login Admin | Dia dos Namorados Dial Fit",
 };
 
-export default async function AdminLoginPage() {
+function getLoginErrorMessage(errorCode: unknown) {
+  if (errorCode === "not-authorized") {
+    return "Conta Google conectada, mas esse e-mail não está autorizado para o painel administrativo.";
+  }
+
+  if (errorCode === "session") {
+    return "Não foi possível concluir o login com Google. Tente novamente.";
+  }
+
+  return "";
+}
+
+export default async function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string | string[] }>;
+}) {
+  const loginErrorMessage = getLoginErrorMessage((await searchParams).error);
   const supabase = await createSupabaseServerClient();
   const adminEmails = getAdminEmails();
 
@@ -59,6 +76,12 @@ export default async function AdminLoginPage() {
           </p>
 
           <div className="mt-7">
+            {loginErrorMessage ? (
+              <div className="campaign-frame-soft mb-4 bg-[#fff0f3] p-4 text-sm font-semibold leading-6 text-[#a4213d]">
+                {loginErrorMessage}
+              </div>
+            ) : null}
+
             {configured ? (
               <AdminLogin />
             ) : (
