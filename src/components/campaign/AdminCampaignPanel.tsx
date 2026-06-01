@@ -86,7 +86,7 @@ function StatusBadge({ status }: { status: EntryStatus }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles[status]}`}
+      className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-xs font-semibold ${statusStyles[status]}`}
     >
       <Icon size={14} aria-hidden="true" />
       {status}
@@ -170,9 +170,9 @@ export function AdminCampaignPanel({
   return (
     <section className="grid min-w-0 gap-6">
       <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <article className="rounded-[1.4rem] border border-white/70 bg-white/78 p-5 shadow-xl shadow-[#5b1224]/8 backdrop-blur">
+        <article className="campaign-frame-soft bg-white/82 p-5 backdrop-blur">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f7fbf6] text-[#0e8b4a]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-md border border-[#3b111c]/18 bg-[#f7fbf6] text-[#0e8b4a]">
               <UsersRound size={19} aria-hidden="true" />
             </div>
             <div>
@@ -186,9 +186,9 @@ export function AdminCampaignPanel({
           </div>
         </article>
 
-        <article className="rounded-[1.4rem] border border-white/70 bg-white/78 p-5 shadow-xl shadow-[#5b1224]/8 backdrop-blur">
+        <article className="campaign-frame-soft bg-white/82 p-5 backdrop-blur">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#effaf3] text-[#0e8b4a]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-md border border-[#3b111c]/18 bg-[#effaf3] text-[#0e8b4a]">
               <ShieldCheck size={19} aria-hidden="true" />
             </div>
             <div>
@@ -202,9 +202,9 @@ export function AdminCampaignPanel({
           </div>
         </article>
 
-        <article className="rounded-[1.4rem] border border-white/70 bg-white/78 p-5 shadow-xl shadow-[#5b1224]/8 backdrop-blur">
+        <article className="campaign-frame-soft bg-white/82 p-5 backdrop-blur">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#fff8e8] text-[#7a5b17]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-md border border-[#3b111c]/18 bg-[#fff8e8] text-[#7a5b17]">
               <Filter size={19} aria-hidden="true" />
             </div>
             <div>
@@ -218,9 +218,9 @@ export function AdminCampaignPanel({
           </div>
         </article>
 
-        <article className="rounded-[1.4rem] border border-white/70 bg-white/78 p-5 shadow-xl shadow-[#5b1224]/8 backdrop-blur">
+        <article className="campaign-frame-soft bg-white/82 p-5 backdrop-blur">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#fff0f3] text-[#a4213d]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-md border border-[#3b111c]/18 bg-[#fff0f3] text-[#a4213d]">
               <AlertTriangle size={19} aria-hidden="true" />
             </div>
             <div>
@@ -236,13 +236,13 @@ export function AdminCampaignPanel({
       </div>
 
       {duplicateDocuments.length > 0 ? (
-        <div className="rounded-[1.2rem] border border-[#f1c0cc] bg-[#fff0f3]/88 p-4 text-sm font-semibold text-[#a4213d] shadow-sm shadow-[#5b1224]/6">
+        <div className="campaign-frame-soft bg-[#fff0f3]/88 p-4 text-sm font-semibold text-[#a4213d]">
           Atenção: existem documentos repetidos na base mockada. Revise antes
           de validar as inscrições.
         </div>
       ) : null}
 
-      <section className="min-w-0 rounded-[1.6rem] border border-white/70 bg-white/82 p-5 shadow-xl shadow-[#5b1224]/8 backdrop-blur sm:p-6">
+      <section className="campaign-frame min-w-0 bg-white/86 p-5 backdrop-blur sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-2xl font-semibold text-[#3b111c]">
@@ -257,7 +257,7 @@ export function AdminCampaignPanel({
           <button
             type="button"
             onClick={() => downloadCsv(entries)}
-            className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-full bg-[#0e8b4a] px-5 text-sm font-semibold text-white shadow-lg shadow-[#0e8b4a]/16 transition hover:-translate-y-0.5 hover:bg-[#0b723e]"
+            className="campaign-button inline-flex h-11 w-fit items-center justify-center gap-2 bg-[#0e8b4a] px-5 text-sm font-semibold text-white"
           >
             <Download size={17} aria-hidden="true" />
             Exportar CSV
@@ -270,7 +270,7 @@ export function AdminCampaignPanel({
               key={unit}
               type="button"
               onClick={() => setUnitFilter(unit)}
-              className={`h-10 rounded-full border px-4 text-sm font-semibold transition ${
+              className={`h-10 rounded-md border-2 px-4 text-sm font-semibold transition ${
                 unitFilter === unit
                   ? "border-[#0e8b4a] bg-[#0e8b4a] text-white"
                   : "border-[#ead0d6] bg-white/80 text-[#6f555d] hover:border-[#0e8b4a]/40"
@@ -287,7 +287,7 @@ export function AdminCampaignPanel({
               key={status}
               type="button"
               onClick={() => setStatusFilter(status)}
-              className={`h-10 rounded-full border px-4 text-sm font-semibold transition ${
+              className={`h-10 rounded-md border-2 px-4 text-sm font-semibold transition ${
                 statusFilter === status
                   ? "border-[#5b1224] bg-[#5b1224] text-white"
                   : "border-[#ead0d6] bg-white/80 text-[#6f555d] hover:border-[#5b1224]/36"
@@ -298,7 +298,7 @@ export function AdminCampaignPanel({
           ))}
         </div>
 
-        <div className="mt-6 overflow-x-auto rounded-[1.2rem] border border-[#ead0d6]">
+        <div className="mt-6 overflow-x-auto rounded-lg border-2 border-[#3b111c]">
           <table className="min-w-[1180px] w-full border-collapse text-left text-sm">
             <thead className="bg-[#fff6f1] text-[#6f555d]">
               <tr>
@@ -356,7 +356,7 @@ export function AdminCampaignPanel({
                       onChange={(event) =>
                         updateStatus(entry.id, event.target.value as EntryStatus)
                       }
-                      className="mt-2 h-10 rounded-full border border-[#ead0d6] bg-white px-3 text-sm font-semibold text-[#3b111c] outline-none focus:border-[#0e8b4a] focus:ring-2 focus:ring-[#0e8b4a]/14"
+                      className="campaign-field mt-2 h-10 px-3 text-sm font-semibold"
                     >
                       {STATUS_OPTIONS.map((status) => (
                         <option key={status} value={status}>

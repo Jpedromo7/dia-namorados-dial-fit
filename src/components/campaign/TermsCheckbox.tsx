@@ -36,10 +36,10 @@ export function TermsCheckbox({
     <div>
       <label
         htmlFor={checkboxId}
-        className={`relative flex items-start gap-3 overflow-hidden rounded-[1.5rem] border bg-white/86 p-4 text-sm text-[#4e3039] shadow-sm shadow-[#5b1224]/5 transition duration-300 ${
+        className={`relative flex items-start gap-3 overflow-hidden rounded-lg border-2 bg-white/86 p-4 text-sm text-[#4e3039] shadow-sm shadow-[#5b1224]/5 transition duration-300 ${
           checked
-            ? "border-[#0e8b4a]/36"
-            : "border-[#ead0d6] hover:border-[#d8aeb8]"
+            ? "border-[#0e8b4a]/60"
+            : "border-[#3b111c]/18 hover:border-[#3b111c]/34"
         }`}
       >
         {burstKey > 0

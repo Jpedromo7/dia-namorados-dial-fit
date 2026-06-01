@@ -16,14 +16,45 @@ As principais constantes da campanha ficam em `src/config/campaign.ts`:
 - `DIAL_BEACH_GOOGLE_REVIEW_URL`
 - `CAMPAIGN_RULES_URL`
 
+Crie um `.env.local` com:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+ADMIN_EMAILS=
+```
+
+`SUPABASE_SERVICE_ROLE_KEY` fica somente no servidor. Nunca use essa chave em
+componentes client-side nem exponha no navegador.
+
+No Supabase Auth, adicione os redirects locais:
+
+```txt
+http://localhost:3025/**
+http://localhost:3025/auth/callback
+```
+
+Para produção, troque `localhost` pelo domínio publicado.
+
+## Segurança
+
+- As rotas públicas retornam somente número de inscrição e nomes abreviados.
+- CPF, e-mail e telefone ficam restritos ao servidor/admin.
+- As APIs POST/PATCH validam origem, tamanho do JSON, limite de tentativas e
+  campos obrigatórios.
+- O painel admin envia magic link apenas pelo servidor e valida `ADMIN_EMAILS`.
+- As migrações do Supabase habilitam RLS e revogam acesso direto de
+  `anon`/`authenticated` às tabelas da campanha.
+
 ## Desenvolvimento
 
 ```bash
 npm install
-npm run dev
+npm run dev -- --port 3025
 ```
 
-Abra `http://localhost:3000`.
+Abra `http://localhost:3025`.
 
 ## Verificação
 

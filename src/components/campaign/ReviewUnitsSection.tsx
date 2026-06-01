@@ -38,9 +38,9 @@ export function ReviewUnitsSection({
   onReviewConfirmedChange: (checked: boolean) => void;
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-[#f0d1d8] bg-[#fff8f7] p-5 shadow-sm shadow-[#5b1224]/6">
+    <section className="campaign-frame-soft bg-[#fff8f7] p-5">
       <div className="flex items-start gap-3">
-        <span className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f8e4e8] text-[#a4213d]">
+        <span className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[#3b111c]/18 bg-[#f8e4e8] text-[#a4213d]">
           <Heart size={18} aria-hidden="true" />
         </span>
         <div>
@@ -55,15 +55,15 @@ export function ReviewUnitsSection({
       </div>
 
       <article
-        className={`mt-5 rounded-[1.25rem] border bg-white/82 p-4 shadow-sm shadow-[#5b1224]/6 transition ${
+        className={`mt-5 rounded-lg border-2 bg-white/82 p-4 shadow-sm shadow-[#5b1224]/6 transition ${
           reviewedUnit
-            ? "border-[#0e8b4a]/42 ring-2 ring-[#0e8b4a]/12"
-            : "border-white"
+            ? "border-[#0e8b4a]/60 ring-2 ring-[#0e8b4a]/12"
+            : "border-[#3b111c]/18"
         }`}
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#fff1dd] text-[#a66b18]">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-[#3b111c]/16 bg-[#fff1dd] text-[#a66b18]">
               <Star size={19} aria-hidden="true" />
             </span>
             <div>
@@ -93,10 +93,10 @@ export function ReviewUnitsSection({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => onReviewOpened(target.unit)}
-                  className={`inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-sm font-semibold shadow-md transition duration-300 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#0e8b4a] focus:ring-offset-2 ${
+                  className={`campaign-button inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap px-5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0e8b4a] focus:ring-offset-2 ${
                     selected
-                      ? "bg-[#0e8b4a] text-white shadow-[#0e8b4a]/18"
-                      : "border border-[#0e8b4a]/22 bg-white text-[#0e8b4a] shadow-[#5b1224]/6 hover:bg-[#f7fbf6]"
+                      ? "bg-[#0e8b4a] text-white"
+                      : "bg-white text-[#0e8b4a] hover:bg-[#f7fbf6]"
                   }`}
                 >
                   Avaliar {target.label}
@@ -109,10 +109,10 @@ export function ReviewUnitsSection({
       </article>
 
       <label
-        className={`mt-5 flex cursor-pointer items-start gap-3 rounded-[1.2rem] border bg-white/74 p-4 transition ${
+        className={`mt-5 flex cursor-pointer items-start gap-3 rounded-lg border-2 bg-white/74 p-4 transition ${
           showError
             ? "border-[#a4213d] ring-2 ring-[#a4213d]/12"
-            : "border-white"
+            : "border-[#3b111c]/18"
         }`}
       >
         <input

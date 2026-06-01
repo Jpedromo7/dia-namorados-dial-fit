@@ -29,8 +29,8 @@ function getTimeRemaining(targetDate: string): TimeRemaining {
 
 function TimeBox({ label, value }: { label: string; value: number }) {
   return (
-    <div className="relative overflow-hidden rounded-[1.35rem] border border-[#f0d1d8] bg-[#fffaf8]/84 px-3 py-4 text-center shadow-sm shadow-[#5b1224]/6 backdrop-blur">
-      <div className="absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-[#f1c979]/70 to-transparent" />
+    <div className="campaign-frame-soft relative overflow-hidden bg-[#fffaf8]/88 px-3 py-4 text-center backdrop-blur">
+      <div className="absolute inset-x-0 top-0 h-1 bg-[#d8b55e]" />
       <div className="font-display text-4xl font-semibold leading-none text-[#5b1224] sm:text-5xl">
         {String(value).padStart(2, "0")}
       </div>

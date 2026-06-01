@@ -78,8 +78,7 @@ export function ConfirmationLayer({
   }
 
   return (
-    <section className="relative isolate min-h-screen overflow-hidden bg-[#fff6f1] px-5 pb-10 pt-24 sm:px-6 lg:pt-[6.5rem]">
-      <div className="absolute inset-0 bg-[linear-gradient(145deg,#fff7f1_0%,#f7dce2_45%,#4b1020_100%)]" />
+    <section className="campaign-bg relative isolate min-h-screen overflow-hidden px-5 pb-10 pt-24 sm:px-6 lg:pt-[6.5rem]">
       <div className="absolute inset-0 opacity-20">
         <Image
           src={LOMBARDIA_SALAO_IMAGE}
@@ -90,7 +89,6 @@ export function ConfirmationLayer({
         />
       </div>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,247,241,0.9),rgba(255,247,241,0.78)_46%,rgba(91,18,36,0.24))]" />
-      <div className="absolute -left-[14%] top-[20%] h-[44%] w-[38%] rounded-[46%] border border-white/42 bg-white/14 backdrop-blur-sm" />
       <FloatingHeartsEffect />
 
       <div className="relative mx-auto grid w-full max-w-7xl gap-6">
@@ -105,9 +103,9 @@ export function ConfirmationLayer({
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-stretch">
-          <section className="rounded-[2rem] border border-white/70 bg-white/78 p-6 text-center shadow-2xl shadow-[#5b1224]/12 backdrop-blur-xl sm:p-8">
-            <div className="mx-auto flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-[#e7f7ed] text-[#0e8b4a] shadow-lg shadow-[#0e8b4a]/14">
-              <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white">
+          <section className="campaign-frame bg-white/88 p-6 text-center backdrop-blur-xl sm:p-8">
+            <div className="campaign-frame-soft mx-auto flex h-[4.5rem] w-[4.5rem] items-center justify-center bg-[#e7f7ed] text-[#0e8b4a]">
+              <span className="relative flex h-16 w-16 items-center justify-center rounded-md bg-white">
                 <Heart
                   className="absolute -right-1 -top-1 text-[#a4213d]"
                   size={18}
@@ -124,7 +122,7 @@ export function ConfirmationLayer({
               Boa sorte! Seu cadastro foi recebido para a campanha{" "}
               {CAMPAIGN_NAME}.
             </p>
-            <div className="mx-auto mt-7 inline-flex items-center gap-3 rounded-full border border-[#d8b55e]/38 bg-[#fff8e8] px-6 py-4 text-[#5b1224] shadow-sm shadow-[#5b1224]/6">
+            <div className="campaign-frame-soft mx-auto mt-7 inline-flex items-center gap-3 bg-[#fff8e8] px-6 py-4 text-[#5b1224]">
               <span className="text-sm font-semibold">Seu número:</span>
               <span className="font-display text-4xl font-semibold leading-none text-[#0e8b4a]">
                 {latestEntry?.raffleNumber ?? "001"}
@@ -132,7 +130,7 @@ export function ConfirmationLayer({
             </div>
           </section>
 
-          <section className="relative min-h-[430px] overflow-hidden rounded-[2rem] border border-white/45 bg-[#3b111c] shadow-2xl shadow-[#5b1224]/18">
+          <section className="campaign-frame-gold relative min-h-[430px] overflow-hidden bg-[#3b111c]">
             <Image
               src={LOMBARDIA_FACADE_IMAGE}
               alt="Fachada do Restaurante Lombardia à noite"
@@ -161,10 +159,10 @@ export function ConfirmationLayer({
           </section>
         </div>
 
-        <section className="rounded-[2rem] border border-white/70 bg-white/78 p-5 shadow-xl shadow-[#5b1224]/10 backdrop-blur-xl sm:p-6">
+        <section className="campaign-frame bg-white/88 p-5 backdrop-blur-xl sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-md">
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#fff0f3] px-4 py-2 text-sm font-semibold text-[#a4213d]">
+              <div className="inline-flex items-center gap-2 rounded-md border border-[#3b111c]/18 bg-[#fff0f3] px-4 py-2 text-sm font-semibold text-[#a4213d]">
                 <Utensils size={16} aria-hidden="true" />
                 Expectativa para o sorteio
               </div>
@@ -199,7 +197,7 @@ export function ConfirmationLayer({
           <button
             type="button"
             onClick={shareCampaign}
-            className="inline-flex h-[3.25rem] items-center justify-center gap-2 rounded-full bg-[#0e8b4a] px-7 text-sm font-semibold text-white shadow-xl shadow-[#0e8b4a]/20 transition duration-300 hover:-translate-y-0.5 hover:bg-[#0b723e]"
+            className="campaign-button inline-flex h-[3.25rem] items-center justify-center gap-2 bg-[#0e8b4a] px-7 text-sm font-semibold text-white"
           >
             <Share2 size={18} aria-hidden="true" />
             Compartilhar campanha
@@ -207,7 +205,7 @@ export function ConfirmationLayer({
           <button
             type="button"
             onClick={onRestart}
-            className="inline-flex h-[3.25rem] items-center justify-center gap-2 rounded-full border border-[#7d2237]/18 bg-white/72 px-7 text-sm font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/8 backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-white"
+            className="campaign-button inline-flex h-[3.25rem] items-center justify-center gap-2 bg-white/90 px-7 text-sm font-semibold text-[#5b1224] backdrop-blur"
           >
             <Home size={18} aria-hidden="true" />
             Voltar para o início

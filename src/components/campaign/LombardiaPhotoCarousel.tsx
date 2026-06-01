@@ -91,7 +91,7 @@ export function LombardiaPhotoCarousel() {
 
   return (
     <div
-      className="relative min-h-[320px] sm:min-h-[520px]"
+      className="relative h-full min-h-[320px] sm:min-h-[520px]"
       onTouchStart={(event) => setTouchStartX(event.touches[0].clientX)}
       onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0].clientX)}
     >
@@ -102,7 +102,7 @@ export function LombardiaPhotoCarousel() {
           return (
             <div
               key={image}
-              className="romantic-surface absolute inset-0 overflow-hidden rounded-[1.6rem] border border-white/45 bg-[#3b111c] shadow-2xl shadow-[#5b1224]/28 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+              className="romantic-surface absolute inset-0 overflow-hidden rounded-lg border-2 border-[#3b111c] bg-[#3b111c] shadow-[8px_8px_0_#3b111c] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
               style={getCardStyle(offset)}
             >
               <Image
@@ -122,7 +122,7 @@ export function LombardiaPhotoCarousel() {
         type="button"
         aria-label="Foto anterior"
         onClick={showPrevious}
-        className="absolute left-4 top-1/2 z-50 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/24 bg-[#16080d]/34 text-white shadow-lg shadow-[#16080d]/20 backdrop-blur transition duration-300 hover:-translate-y-[52%] hover:bg-[#16080d]/52 focus:outline-none focus:ring-2 focus:ring-white/70"
+        className="absolute left-4 top-1/2 z-50 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md border-2 border-white/70 bg-[#16080d]/54 text-white shadow-[4px_4px_0_#3b111c] backdrop-blur transition duration-300 hover:-translate-y-[52%] hover:bg-[#16080d]/72 focus:outline-none focus:ring-2 focus:ring-white/70"
       >
         <ChevronLeft size={22} aria-hidden="true" />
       </button>
@@ -131,19 +131,19 @@ export function LombardiaPhotoCarousel() {
         type="button"
         aria-label="Próxima foto"
         onClick={showNext}
-        className="absolute right-4 top-1/2 z-50 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/24 bg-[#16080d]/34 text-white shadow-lg shadow-[#16080d]/20 backdrop-blur transition duration-300 hover:-translate-y-[52%] hover:bg-[#16080d]/52 focus:outline-none focus:ring-2 focus:ring-white/70"
+        className="absolute right-4 top-1/2 z-50 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md border-2 border-white/70 bg-[#16080d]/54 text-white shadow-[4px_4px_0_#3b111c] backdrop-blur transition duration-300 hover:-translate-y-[52%] hover:bg-[#16080d]/72 focus:outline-none focus:ring-2 focus:ring-white/70"
       >
         <ChevronRight size={22} aria-hidden="true" />
       </button>
 
-      <div className="absolute bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#16080d]/30 px-3 py-2 backdrop-blur">
+      <div className="absolute bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-md border-2 border-white/50 bg-[#16080d]/44 px-3 py-2 backdrop-blur">
         {carouselImages.map((image, index) => (
           <button
             key={`${image}-dot`}
             type="button"
             aria-label={`Mostrar foto ${index + 1}`}
             onClick={() => setActiveIndex(index)}
-            className={`h-2.5 rounded-full transition duration-300 ${
+            className={`h-2.5 rounded-sm transition duration-300 ${
               index === activeIndex
                 ? "w-7 bg-white"
                 : "w-2.5 bg-white/48 hover:bg-white/72"

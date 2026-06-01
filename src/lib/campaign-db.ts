@@ -1,6 +1,12 @@
+import { randomInt } from "node:crypto";
 import { DRAW_DATE, WINNING_COUPLES_COUNT } from "@/config/campaign";
+import { CAMPAIGN_UNITS } from "@/config/campaign";
 import { MOCK_CAMPAIGN_ENTRIES } from "@/data/mockEntries";
-import { formatRaffleNumber, normalizeDocument } from "@/lib/campaign";
+import {
+  abbreviateName,
+  formatRaffleNumber,
+  normalizeDocument,
+} from "@/lib/campaign";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type {
   CampaignEntry,
@@ -43,6 +49,10 @@ type CreateEntryResult =
   | { ok: true; entry: CampaignEntry }
   | { ok: false; status: number; message: string };
 
+type NormalizedPayloadResult =
+  | { ok: true; payload: RegistrationPayload }
+  | { ok: false; status: number; message: string };
+
 type LookupEntryResult =
   | { ok: true; entry: CampaignEntry }
   | { ok: false; status: number; message: string };
@@ -52,6 +62,24 @@ const VALID_STATUSES: EntryStatus[] = [
   "Validado",
   "Desclassificado",
 ];
+
+function isDemoMode() {
+  return process.env.NODE_ENV !== "production";
+}
+
+function redactPublicEntry(entry: CampaignEntry): CampaignEntry {
+  return {
+    ...entry,
+    studentName: abbreviateName(entry.studentName),
+    companionName: abbreviateName(entry.companionName),
+    studentEmail: "",
+    studentPhone: "",
+    studentDocument: "",
+    companionDocument: "",
+    companionPhone: "",
+    companionEmail: "",
+  };
+}
 
 function mapEntryRow(row: CampaignEntryRow): CampaignEntry {
   return {
@@ -105,53 +133,191 @@ function isValidStatus(status: string): status is EntryStatus {
   return VALID_STATUSES.includes(status as EntryStatus);
 }
 
+function isCampaignUnit(unit: string): unit is CampaignUnit {
+  return CAMPAIGN_UNITS.includes(unit as CampaignUnit);
+}
+
+function cleanText(value: unknown, maxLength: number) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
-function validatePayload(payload: RegistrationPayload) {
+function cpfDigits(value: unknown) {
+  return cleanText(value, 24).replace(/\D/g, "");
+}
+
+function hasValidCpfChecksum(documentValue: string) {
+  if (!/^\d{11}$/.test(documentValue) || /^(\d)\1{10}$/.test(documentValue)) {
+    return false;
+  }
+
+  const digits = documentValue.split("").map(Number);
+  const calculateDigit = (length: number) => {
+    const sum = digits
+      .slice(0, length)
+      .reduce((total, digit, index) => total + digit * (length + 1 - index), 0);
+    const remainder = (sum * 10) % 11;
+
+    return remainder === 10 ? 0 : remainder;
+  };
+
+  return calculateDigit(9) === digits[9] && calculateDigit(10) === digits[10];
+}
+
+function isPhone(value: string) {
+  const digits = value.replace(/\D/g, "");
+
+  return digits.length >= 10 && digits.length <= 13;
+}
+
+function normalizeRegistrationPayload(value: unknown): NormalizedPayloadResult {
+  if (!value || typeof value !== "object") {
+    return {
+      ok: false,
+      status: 400,
+      message: "Dados de inscrição inválidos.",
+    };
+  }
+
+  const payload = value as Partial<Record<keyof RegistrationPayload, unknown>>;
+  const studentName = cleanText(payload.studentName, 120);
+  const studentEmail = cleanText(payload.studentEmail, 254).toLowerCase();
+  const studentPhone = cleanText(payload.studentPhone, 32);
+  const studentDocument = cpfDigits(payload.studentDocument);
+  const unit = cleanText(payload.unit, 40);
+  const companionName = cleanText(payload.companionName, 120);
+  const companionDocument = cpfDigits(payload.companionDocument);
+  const companionPhone = cleanText(payload.companionPhone, 32);
+  const companionEmail = cleanText(payload.companionEmail, 254).toLowerCase();
+  const reviewUnit = cleanText(payload.reviewUnit, 40);
+
   const requiredValues = [
-    payload.studentName,
-    payload.studentEmail,
-    payload.studentPhone,
-    payload.studentDocument,
-    payload.companionName,
-    payload.companionDocument,
-    payload.companionPhone,
-    payload.reviewUnit,
+    studentName,
+    studentEmail,
+    studentPhone,
+    studentDocument,
+    unit,
+    companionName,
+    companionDocument,
+    companionPhone,
+    reviewUnit,
   ];
 
   if (requiredValues.some((value) => !String(value ?? "").trim())) {
-    return "Preencha todos os campos obrigatórios.";
+    return {
+      ok: false,
+      status: 400,
+      message: "Preencha todos os campos obrigatórios.",
+    };
   }
 
-  if (!isEmail(payload.studentEmail)) {
-    return "Informe um e-mail válido.";
+  if (studentName.length < 3 || companionName.length < 3) {
+    return {
+      ok: false,
+      status: 400,
+      message: "Informe nomes completos válidos.",
+    };
   }
 
-  if (payload.companionEmail && !isEmail(payload.companionEmail)) {
-    return "Informe um e-mail válido para o acompanhante.";
+  if (!isEmail(studentEmail)) {
+    return { ok: false, status: 400, message: "Informe um e-mail válido." };
   }
 
-  if (!payload.acceptedTerms || !payload.completedReview) {
-    return "Confirme a avaliação e aceite o regulamento.";
+  if (companionEmail && !isEmail(companionEmail)) {
+    return {
+      ok: false,
+      status: 400,
+      message: "Informe um e-mail válido para o acompanhante.",
+    };
+  }
+
+  if (!isPhone(studentPhone) || !isPhone(companionPhone)) {
+    return {
+      ok: false,
+      status: 400,
+      message: "Informe telefones válidos com DDD.",
+    };
   }
 
   if (
-    normalizeDocument(payload.studentDocument) ===
-    normalizeDocument(payload.companionDocument)
+    !hasValidCpfChecksum(studentDocument) ||
+    !hasValidCpfChecksum(companionDocument)
   ) {
-    return "Aluno e acompanhante precisam ter CPFs diferentes.";
+    return { ok: false, status: 400, message: "Informe CPFs válidos." };
   }
 
-  return null;
+  if (!isCampaignUnit(unit) || !isCampaignUnit(reviewUnit)) {
+    return {
+      ok: false,
+      status: 400,
+      message: "Selecione uma unidade válida.",
+    };
+  }
+
+  if (!payload.acceptedTerms || !payload.completedReview) {
+    return {
+      ok: false,
+      status: 400,
+      message: "Confirme a avaliação e aceite o regulamento.",
+    };
+  }
+
+  if (studentDocument === companionDocument) {
+    return {
+      ok: false,
+      status: 400,
+      message: "Aluno e acompanhante precisam ter CPFs diferentes.",
+    };
+  }
+
+  return {
+    ok: true,
+    payload: {
+      studentName,
+      studentEmail,
+      studentPhone,
+      studentDocument,
+      unit,
+      companionName,
+      companionDocument,
+      companionPhone,
+      companionEmail,
+      reviewUnit,
+      completedReview: true,
+      acceptedTerms: true,
+    },
+  };
+}
+
+function shuffleEntries<T>(entries: T[]) {
+  const shuffledEntries = [...entries];
+
+  for (let index = shuffledEntries.length - 1; index > 0; index -= 1) {
+    const targetIndex = randomInt(index + 1);
+    const currentEntry = shuffledEntries[index];
+    shuffledEntries[index] = shuffledEntries[targetIndex];
+    shuffledEntries[targetIndex] = currentEntry;
+  }
+
+  return shuffledEntries;
 }
 
 export async function getPublicCampaignEntries() {
   const supabase = createSupabaseAdminClient();
 
   if (!supabase) {
-    return MOCK_CAMPAIGN_ENTRIES;
+    return isDemoMode() ? MOCK_CAMPAIGN_ENTRIES.map(redactPublicEntry) : [];
   }
 
   const { data, error } = await supabase
@@ -163,14 +329,18 @@ export async function getPublicCampaignEntries() {
     return MOCK_CAMPAIGN_ENTRIES;
   }
 
-  return (data as CampaignEntryRow[]).map(mapEntryRow);
+  return (data as CampaignEntryRow[]).map(mapEntryRow).map(redactPublicEntry);
 }
 
 export async function getAdminCampaignEntries() {
   const supabase = createSupabaseAdminClient();
 
   if (!supabase) {
-    return MOCK_CAMPAIGN_ENTRIES;
+    if (isDemoMode()) {
+      return MOCK_CAMPAIGN_ENTRIES;
+    }
+
+    throw new Error("Banco da campanha não configurado.");
   }
 
   const { data, error } = await supabase
@@ -188,9 +358,9 @@ export async function getAdminCampaignEntries() {
 export async function findCampaignEntryByDocument(
   document: string,
 ): Promise<LookupEntryResult> {
-  const normalizedDocument = normalizeDocument(document);
+  const normalizedDocument = cpfDigits(document);
 
-  if (normalizedDocument.length < 6) {
+  if (!hasValidCpfChecksum(normalizedDocument)) {
     return {
       ok: false,
       status: 400,
@@ -201,10 +371,18 @@ export async function findCampaignEntryByDocument(
   const supabase = createSupabaseAdminClient();
 
   if (!supabase) {
+    if (!isDemoMode()) {
+      return {
+        ok: false,
+        status: 503,
+        message: "Banco da campanha não configurado.",
+      };
+    }
+
     const entry = MOCK_CAMPAIGN_ENTRIES.find(
       (item) =>
-        normalizeDocument(item.studentDocument) === normalizedDocument ||
-        normalizeDocument(item.companionDocument) === normalizedDocument,
+        cpfDigits(item.studentDocument) === normalizedDocument ||
+        cpfDigits(item.companionDocument) === normalizedDocument,
     );
 
     if (!entry) {
@@ -216,7 +394,7 @@ export async function findCampaignEntryByDocument(
     }
 
     const role =
-      normalizeDocument(entry.studentDocument) === normalizedDocument
+      cpfDigits(entry.studentDocument) === normalizedDocument
         ? "student"
         : "companion";
 
@@ -266,17 +444,26 @@ export async function findCampaignEntryByDocument(
 }
 
 export async function createCampaignEntry(
-  payload: RegistrationPayload,
+  rawPayload: unknown,
 ): Promise<CreateEntryResult> {
-  const validationMessage = validatePayload(payload);
+  const normalizedPayload = normalizeRegistrationPayload(rawPayload);
 
-  if (validationMessage) {
-    return { ok: false, status: 400, message: validationMessage };
+  if (!normalizedPayload.ok) {
+    return normalizedPayload;
   }
 
+  const payload = normalizedPayload.payload;
   const supabase = createSupabaseAdminClient();
 
   if (!supabase) {
+    if (!isDemoMode()) {
+      return {
+        ok: false,
+        status: 503,
+        message: "Banco da campanha não configurado.",
+      };
+    }
+
     const now = new Date().toISOString();
 
     return {
@@ -343,6 +530,10 @@ export async function updateCampaignEntryStatus(
   const supabase = createSupabaseAdminClient();
 
   if (!supabase) {
+    if (!isDemoMode()) {
+      throw new Error("Banco da campanha não configurado.");
+    }
+
     const entry = MOCK_CAMPAIGN_ENTRIES.find((item) => item.id === id);
 
     if (!entry) {
@@ -411,9 +602,13 @@ export async function drawCampaignWinners(adminEmail: string) {
   const supabase = createSupabaseAdminClient();
 
   if (!supabase) {
-    return MOCK_CAMPAIGN_ENTRIES.filter((entry) => entry.status === "Validado")
-      .sort(() => Math.random() - 0.5)
-      .slice(0, WINNING_COUPLES_COUNT);
+    if (!isDemoMode()) {
+      throw new Error("Banco da campanha não configurado.");
+    }
+
+    return shuffleEntries(
+      MOCK_CAMPAIGN_ENTRIES.filter((entry) => entry.status === "Validado"),
+    ).slice(0, WINNING_COUPLES_COUNT);
   }
 
   const { data, error } = await supabase
@@ -425,9 +620,7 @@ export async function drawCampaignWinners(adminEmail: string) {
     throw new Error("Não foi possível carregar participantes validados.");
   }
 
-  const shuffledEntries = (data as CampaignEntryRow[]).sort(
-    () => Math.random() - 0.5,
-  );
+  const shuffledEntries = shuffleEntries(data as CampaignEntryRow[]);
   const selectedEntries = shuffledEntries.slice(0, WINNING_COUPLES_COUNT);
 
   if (selectedEntries.length < WINNING_COUPLES_COUNT) {
@@ -445,6 +638,12 @@ export async function drawCampaignWinners(adminEmail: string) {
   );
 
   if (insertError) {
+    const winners = await getRaffleWinners();
+
+    if (winners.length >= WINNING_COUPLES_COUNT) {
+      return winners;
+    }
+
     throw new Error("Não foi possível salvar o resultado do sorteio.");
   }
 

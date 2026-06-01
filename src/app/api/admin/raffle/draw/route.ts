@@ -2,10 +2,18 @@ import { NextResponse } from "next/server";
 import { getCurrentAdmin } from "@/lib/admin-auth";
 import { drawCampaignWinners } from "@/lib/campaign-db";
 import { getErrorMessage } from "@/lib/api";
+import { assertSameOrigin, enforceRateLimit, jsonError } from "@/lib/security";
 
 export const dynamic = "force-dynamic";
 
-export async function POST() {
+export async function POST(request: Request) {
+  try {
+    assertSameOrigin(request);
+    enforceRateLimit(request, "admin-raffle-draw", 10, 60_000);
+  } catch (error) {
+    return jsonError(error);
+  }
+
   const admin = await getCurrentAdmin();
 
   if (!admin) {

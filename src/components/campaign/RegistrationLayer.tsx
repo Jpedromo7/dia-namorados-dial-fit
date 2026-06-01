@@ -32,6 +32,8 @@ import {
   WINNING_COUPLES_COUNT,
 } from "@/config/campaign";
 import { normalizeDocument } from "@/lib/campaign";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 import type {
   CampaignUnit,
   RegistrationExtras,
@@ -202,7 +204,7 @@ function TextField({
         placeholder={placeholder}
         aria-invalid={Boolean(error)}
         onChange={(event) => onChange(name, event.target.value)}
-        className="mt-2 h-12 w-full rounded-[1rem] border border-[#ead0d6] bg-white/86 px-4 text-sm text-[#24191c] outline-none transition duration-300 placeholder:text-[#a98d95] hover:border-[#d8aeb8] focus:border-[#0e8b4a] focus:ring-2 focus:ring-[#0e8b4a]/16"
+        className="campaign-field mt-2 h-12 w-full px-4 text-sm placeholder:text-[#a98d95]"
       />
       <FieldError message={error} />
     </label>
@@ -217,14 +219,14 @@ function StoredRegistrationHint({
   onShowStoredRegistration: (document: string) => void;
 }) {
   return (
-    <div className="mt-3 rounded-[1rem] border border-[#0e8b4a]/18 bg-[#f4fbf6] p-3 text-sm text-[#315143]">
+    <div className="campaign-frame-soft mt-3 bg-[#f4fbf6] p-3 text-sm text-[#315143]">
       <p className="font-medium">
         Encontramos uma inscrição salva neste aparelho.
       </p>
       <button
         type="button"
         onClick={() => onShowStoredRegistration(document)}
-        className="mt-2 inline-flex items-center gap-2 rounded-full bg-[#0e8b4a] px-4 py-2 text-xs font-semibold text-white shadow-sm shadow-[#0e8b4a]/14 transition duration-300 hover:-translate-y-0.5 hover:bg-[#0b723e]"
+        className="campaign-button mt-2 inline-flex items-center gap-2 bg-[#0e8b4a] px-4 py-2 text-xs font-semibold text-white"
       >
         <Check size={14} aria-hidden="true" />
         Ver minha inscrição
@@ -262,6 +264,7 @@ export function RegistrationLayer({
   const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [googleProfileMessage, setGoogleProfileMessage] = useState("");
   const photoInputRef = useRef<HTMLInputElement | null>(null);
   const submitTimerRef = useRef<number | null>(null);
 
@@ -348,11 +351,103 @@ export function RegistrationLayer({
     setForm((current) => ({ ...current, [name]: value }));
   }
 
-  function handleGoogleSignIn() {
-    setSubmitError(
-      "O login com Google dos alunos ficará disponível quando o OAuth for ativado no Supabase.",
-    );
+  function fillStudentFieldsFromUser(user: User | null) {
+    if (!user) {
+      return;
+    }
+
+    const metadata = user.user_metadata as {
+      full_name?: string;
+      name?: string;
+    };
+    const studentName = metadata.full_name ?? metadata.name ?? "";
+    const studentEmail = user.email ?? "";
+
+    if (studentName || studentEmail) {
+      setGoogleProfileMessage(
+        "Login com Google conectado. Complete os dados que faltam para finalizar a inscrição.",
+      );
+    } else {
+      setGoogleProfileMessage(
+        "Login com Google conectado. Complete seus dados manualmente para finalizar.",
+      );
+    }
+
+    setForm((current) => ({
+      ...current,
+      studentEmail: current.studentEmail || studentEmail,
+      studentName: current.studentName || studentName,
+    }));
   }
+
+  async function handleGoogleSignIn() {
+    setSubmitError("");
+
+    const supabase = createSupabaseBrowserClient();
+
+    if (!supabase) {
+      setGoogleProfileMessage("");
+      setSubmitError(
+        "Configure as variáveis NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY para ativar o login com Google.",
+      );
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/?step=registration")}`,
+      },
+    });
+
+    if (error) {
+      setGoogleProfileMessage("");
+      setSubmitError(
+        "Não foi possível abrir o login com Google. Confira o provedor no Supabase.",
+      );
+    }
+  }
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+
+    if (!supabase) {
+      return;
+    }
+
+    let isMounted = true;
+
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!isMounted) {
+        return;
+      }
+
+      fillStudentFieldsFromUser(data.user);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!isMounted) {
+          return;
+        }
+
+        fillStudentFieldsFromUser(session?.user ?? null);
+      },
+    );
+
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!isMounted) {
+        return;
+      }
+
+      fillStudentFieldsFromUser(data.session?.user ?? null);
+    });
+
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   async function handleCouplePhotoChange(file: File | undefined) {
     if (!file) {
@@ -432,26 +527,23 @@ export function RegistrationLayer({
   }
 
   return (
-    <section className="relative isolate min-h-screen overflow-hidden bg-[#fff6f1] px-5 pb-10 pt-24 sm:px-6 lg:pt-[6.5rem]">
-      <div className="absolute inset-0 bg-[linear-gradient(145deg,#fff7f1_0%,#fbe6e8_45%,#f5cdd5_100%)]" />
+    <section className="campaign-bg relative isolate min-h-screen overflow-hidden px-5 pb-10 pt-24 sm:px-6 lg:pt-[6.5rem]">
       <div className="absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,rgba(255,255,255,0.78),transparent)]" />
-      <div className="absolute -left-[12%] bottom-[6%] h-[44%] w-[36%] rounded-[42%] border border-white/44 bg-white/14 backdrop-blur-sm" />
-      <div className="absolute -right-[14%] top-[14%] h-[48%] w-[38%] rounded-[45%] border border-[#f6d28e]/28 bg-[#5b1224]/10 backdrop-blur-sm" />
       <FloatingHeartsEffect />
 
       <div className="relative mx-auto grid w-full max-w-7xl gap-6">
-        <header className="flex items-center justify-between gap-4">
+        <header className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Image
             src={DIALFIT_LOGO}
             alt="Dial Fit Academia"
             width={170}
             height={70}
-            className="dialfit-logo-clean h-auto w-[142px] sm:w-[166px]"
+            className="dialfit-logo-clean h-auto w-[132px] sm:w-[166px]"
           />
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#7d2237]/18 bg-white/62 px-5 text-sm font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/8 backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-white"
+            className="campaign-button inline-flex h-11 items-center justify-center gap-2 bg-white/90 px-4 text-sm font-semibold text-[#5b1224] backdrop-blur sm:px-5"
           >
             <ArrowLeft size={17} aria-hidden="true" />
             Voltar
@@ -459,7 +551,7 @@ export function RegistrationLayer({
         </header>
 
         <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_430px] lg:items-stretch">
-          <div className="rounded-[2rem] border border-white/66 bg-white/72 p-4 shadow-2xl shadow-[#5b1224]/12 backdrop-blur-xl sm:p-6 lg:p-8">
+          <div className="campaign-frame bg-white/88 p-4 backdrop-blur-xl sm:p-6 lg:p-8">
             <div className="max-w-2xl">
               <h1 className="font-display text-4xl font-semibold leading-tight text-[#3b111c] sm:text-5xl">
                 Faça sua inscrição
@@ -471,9 +563,9 @@ export function RegistrationLayer({
             </div>
 
             <form noValidate onSubmit={handleSubmit} className="mt-8 grid gap-7">
-              <fieldset className="grid gap-5 rounded-[1.5rem] border border-[#f0d1d8] bg-[#fffaf8]/66 p-5">
+              <fieldset className="campaign-frame-soft grid gap-5 bg-[#fffaf8]/82 p-5">
                 <legend className="ml-2 px-2">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-lg font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/6">
+                  <span className="inline-flex items-center gap-2 rounded-md border border-[#3b111c]/20 bg-white px-3 py-1.5 text-lg font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/6">
                     <UserRound size={19} aria-hidden="true" />
                     Dados do aluno ativo
                   </span>
@@ -482,11 +574,16 @@ export function RegistrationLayer({
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
-                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#ead0d6] bg-white px-4 text-sm font-semibold text-[#4e3039] shadow-sm shadow-[#5b1224]/4 transition duration-300 hover:-translate-y-0.5 hover:border-[#0e8b4a]/42 hover:bg-[#f7fbf6] sm:w-fit"
+                  className="campaign-button inline-flex h-12 w-full items-center justify-center gap-2 bg-white px-4 text-sm font-semibold text-[#4e3039] sm:w-fit"
                 >
                   <LogIn size={18} aria-hidden="true" />
                   Entrar com Google
                 </button>
+                {googleProfileMessage ? (
+                  <p className="campaign-frame-soft bg-[#f4fbf6] px-4 py-3 text-sm font-medium leading-6 text-[#315143]">
+                    {googleProfileMessage}
+                  </p>
+                ) : null}
 
                 <div className="grid gap-5 md:grid-cols-2">
                   <TextField
@@ -550,9 +647,9 @@ export function RegistrationLayer({
                 </p>
               </fieldset>
 
-              <fieldset className="grid gap-5 rounded-[1.5rem] border border-[#f0d1d8] bg-[#fffaf8]/66 p-5">
+              <fieldset className="campaign-frame-soft grid gap-5 bg-[#fffaf8]/82 p-5">
                 <legend className="ml-2 px-2">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-lg font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/6">
+                  <span className="inline-flex items-center gap-2 rounded-md border border-[#3b111c]/20 bg-white px-3 py-1.5 text-lg font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/6">
                     <HeartHandshake size={19} aria-hidden="true" />
                     Dados do acompanhante
                   </span>
@@ -616,9 +713,9 @@ export function RegistrationLayer({
                 </div>
               </fieldset>
 
-              <fieldset className="grid gap-4 rounded-[1.5rem] border border-[#f0d1d8] bg-[#fffaf8]/66 p-5">
+              <fieldset className="campaign-frame-soft grid gap-4 bg-[#fffaf8]/82 p-5">
                 <legend className="ml-2 px-2">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-lg font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/6">
+                  <span className="inline-flex items-center gap-2 rounded-md border border-[#3b111c]/20 bg-white px-3 py-1.5 text-lg font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/6">
                     <Camera size={19} aria-hidden="true" />
                     Foto para o story
                   </span>
@@ -626,7 +723,7 @@ export function RegistrationLayer({
 
                 <div className="grid gap-4 md:grid-cols-[190px_1fr] md:items-center">
                   <div
-                    className="relative min-h-[190px] overflow-hidden rounded-[1.45rem] border border-[#ead0d6] bg-[#fff2f4] shadow-sm shadow-[#5b1224]/6"
+                    className="campaign-frame-soft relative min-h-[190px] overflow-hidden bg-[#fff2f4]"
                     style={
                       couplePhotoDataUrl
                         ? {
@@ -639,7 +736,7 @@ export function RegistrationLayer({
                   >
                     {!couplePhotoDataUrl ? (
                       <div className="flex h-full min-h-[190px] flex-col items-center justify-center gap-3 px-5 text-center text-[#8b6270]">
-                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#a4213d] shadow-sm shadow-[#5b1224]/8">
+                        <span className="flex h-14 w-14 items-center justify-center rounded-md border border-[#3b111c]/18 bg-white text-[#a4213d] shadow-sm shadow-[#5b1224]/8">
                           <ImagePlus size={24} aria-hidden="true" />
                         </span>
                         <span className="text-sm font-semibold">
@@ -661,7 +758,7 @@ export function RegistrationLayer({
                     <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                       <label
                         htmlFor="couplePhoto"
-                        className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0e8b4a] px-5 text-sm font-semibold text-white shadow-lg shadow-[#0e8b4a]/16 transition duration-300 hover:-translate-y-0.5 hover:bg-[#0b723e]"
+                        className="campaign-button inline-flex h-12 cursor-pointer items-center justify-center gap-2 bg-[#0e8b4a] px-5 text-sm font-semibold text-white"
                       >
                         <ImagePlus size={18} aria-hidden="true" />
                         {couplePhotoDataUrl ? "Trocar foto" : "Escolher foto"}
@@ -682,7 +779,7 @@ export function RegistrationLayer({
                         <button
                           type="button"
                           onClick={removeCouplePhoto}
-                          className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[#7d2237]/18 bg-white px-5 text-sm font-semibold text-[#5b1224] shadow-sm shadow-[#5b1224]/5 transition duration-300 hover:-translate-y-0.5 hover:bg-[#fff7f1]"
+                          className="campaign-button inline-flex h-12 items-center justify-center gap-2 bg-white px-5 text-sm font-semibold text-[#5b1224]"
                         >
                           <X size={18} aria-hidden="true" />
                           Remover
@@ -722,7 +819,7 @@ export function RegistrationLayer({
                 <button
                   type="submit"
                   disabled={!formIsReady}
-                  className="group relative inline-flex h-[3.25rem] items-center justify-center gap-2 overflow-hidden rounded-full bg-[#0e8b4a] px-7 text-sm font-semibold text-white shadow-xl shadow-[#0e8b4a]/20 transition duration-300 hover:-translate-y-0.5 hover:bg-[#0b723e] focus:outline-none focus:ring-2 focus:ring-[#0e8b4a] focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#9db9a9] disabled:shadow-none disabled:hover:translate-y-0"
+                  className="campaign-button group relative inline-flex h-[3.25rem] items-center justify-center gap-2 overflow-hidden bg-[#0e8b4a] px-7 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-[#0e8b4a] focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#9db9a9]"
                 >
                   {buttonBurst > 0
                     ? buttonHearts.map((heart) => (
@@ -755,7 +852,7 @@ export function RegistrationLayer({
                 </p>
               </div>
               {submitError ? (
-                <div className="rounded-[1.2rem] border border-[#f1c0cc] bg-[#fff0f3] p-4 text-sm font-semibold text-[#a4213d]">
+                <div className="campaign-frame-soft bg-[#fff0f3] p-4 text-sm font-semibold text-[#a4213d]">
                   {submitError}
                 </div>
               ) : null}
@@ -763,7 +860,7 @@ export function RegistrationLayer({
           </div>
 
           <aside className="min-w-0 lg:h-full">
-            <div className="relative flex h-full min-h-[760px] overflow-hidden rounded-[2rem] border border-white/48 bg-[#3b111c] shadow-2xl shadow-[#5b1224]/18">
+            <div className="campaign-frame-gold relative flex h-full min-h-[760px] overflow-hidden bg-[#3b111c]">
               <Image
                 src={LOMBARDIA_SALAO_IMAGE}
                 alt="Salão interno amplo do Restaurante Lombardia"
@@ -772,9 +869,6 @@ export function RegistrationLayer({
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(42,9,19,0.18),rgba(42,9,19,0.7)_48%,rgba(24,6,12,0.96))]" />
-              <div className="absolute left-6 top-10 h-40 w-40 rounded-full bg-[#f4d190]/16 blur-2xl" />
-              <div className="absolute bottom-28 right-2 h-52 w-52 rounded-full bg-[#e9a2ae]/14 blur-2xl" />
-
               <div className="relative z-10 flex w-full flex-col p-6 text-white sm:p-7">
                 <div className="flex items-center justify-between gap-4">
                   <Image
@@ -809,7 +903,7 @@ export function RegistrationLayer({
                 </div>
 
                 <div className="mt-7 grid gap-3">
-                  <div className="relative min-h-[250px] overflow-hidden rounded-[1.6rem] border border-white/16 bg-white/10 shadow-2xl shadow-black/18">
+                  <div className="relative min-h-[250px] overflow-hidden rounded-lg border-2 border-white/18 bg-white/10 shadow-2xl shadow-black/18">
                     <Image
                       src={LOMBARDIA_WINE_IMAGE}
                       alt="Mesa posta com vinho e taças no Restaurante Lombardia"
@@ -821,7 +915,7 @@ export function RegistrationLayer({
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                    <div className="rounded-[1.35rem] border border-white/14 bg-white/12 p-4 backdrop-blur">
+                    <div className="rounded-lg border-2 border-white/18 bg-white/12 p-4 backdrop-blur">
                       <p className="text-sm font-semibold text-[#ffe7ad]">
                         {WINNING_COUPLES_COUNT} casais vencedores
                       </p>
@@ -831,7 +925,7 @@ export function RegistrationLayer({
                       </p>
                     </div>
 
-                    <div className="relative min-h-[220px] overflow-hidden rounded-[1.5rem] border border-white/14 bg-white/12 sm:min-h-[260px] lg:min-h-[300px]">
+                    <div className="relative min-h-[220px] overflow-hidden rounded-lg border-2 border-white/18 bg-white/12 sm:min-h-[260px] lg:min-h-[300px]">
                       <Image
                         src={LOMBARDIA_FACADE_IMAGE}
                         alt="Fachada do Restaurante Lombardia à noite"
@@ -854,17 +948,17 @@ export function RegistrationLayer({
                   </p>
                   <div className="mt-4 grid gap-2">
                     {["Entrada", "Prato principal", "Sobremesa"].map(
-                    (item) => (
-                      <div
-                        key={item}
-                        className="flex items-center gap-3 rounded-full border border-white/14 bg-white/12 px-4 py-3 text-sm font-semibold backdrop-blur"
-                      >
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0e8b4a]">
-                          <Check size={15} aria-hidden="true" />
-                        </span>
-                        {item}
-                      </div>
-                    ),
+                      (item) => (
+                        <div
+                          key={item}
+                          className="flex items-center gap-3 rounded-md border border-white/18 bg-white/12 px-4 py-3 text-sm font-semibold backdrop-blur"
+                        >
+                          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0e8b4a]">
+                            <Check size={15} aria-hidden="true" />
+                          </span>
+                          {item}
+                        </div>
+                      ),
                     )}
                   </div>
                   <p className="mt-4 text-xs leading-5 text-white/58">

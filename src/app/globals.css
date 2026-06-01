@@ -3,6 +3,14 @@
 :root {
   --background: #f7fbf6;
   --foreground: #101712;
+  --dial-ink: #3b111c;
+  --dial-wine: #5b1224;
+  --dial-rose: #a4213d;
+  --dial-green: #0e8b4a;
+  --dial-gold: #d8b55e;
+  --dial-blush: #fff6f1;
+  --dial-cream: #fffaf8;
+  --dial-mint: #f7fbf6;
   --font-display: "Cormorant Garamond", "Playfair Display", Georgia,
     "Times New Roman", serif;
   --font-editorial: "Baskerville", "Libre Baskerville", Georgia, serif;
@@ -31,6 +39,88 @@ body {
 
 .font-editorial {
   font-family: var(--font-editorial);
+}
+
+.campaign-bg {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 246, 241, 0.96) 0%,
+      rgba(250, 223, 226, 0.9) 44%,
+      rgba(91, 18, 36, 0.16) 100%
+    ),
+    linear-gradient(rgba(59, 17, 28, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 17, 28, 0.06) 1px, transparent 1px);
+  background-size: auto, 44px 44px, 44px 44px;
+}
+
+.campaign-frame {
+  border: 2px solid var(--dial-ink);
+  border-radius: 8px;
+  box-shadow: 8px 8px 0 var(--dial-ink);
+}
+
+.campaign-frame-soft {
+  border: 1.6px solid var(--dial-ink);
+  border-radius: 8px;
+  box-shadow: 6px 6px 0 rgba(59, 17, 28, 0.24);
+}
+
+.campaign-frame-gold {
+  border: 2px solid var(--dial-ink);
+  border-radius: 8px;
+  box-shadow: 8px 8px 0 var(--dial-gold);
+}
+
+.campaign-button {
+  border: 2px solid var(--dial-ink);
+  border-radius: 999px;
+  box-shadow: 4px 4px 0 var(--dial-ink);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+}
+
+.campaign-button:hover:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--dial-ink);
+}
+
+.campaign-button:disabled {
+  box-shadow: none;
+}
+
+.campaign-field {
+  border: 1.6px solid rgba(59, 17, 28, 0.26);
+  border-radius: 8px;
+  background: rgba(255, 250, 248, 0.92);
+  color: #24191c;
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.campaign-field:hover {
+  border-color: rgba(59, 17, 28, 0.42);
+  background: #ffffff;
+}
+
+.campaign-field:focus {
+  border-color: var(--dial-green);
+  box-shadow: 0 0 0 3px rgba(14, 139, 74, 0.16);
+  background: #ffffff;
+}
+
+@media (max-width: 1023px) {
+  .campaign-frame,
+  .campaign-frame-gold {
+    box-shadow: 5px 5px 0 var(--dial-ink);
+  }
 }
 
 .dialfit-logo-clean {

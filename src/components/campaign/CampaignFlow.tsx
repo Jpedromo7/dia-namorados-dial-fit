@@ -1,6 +1,12 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { MOCK_CAMPAIGN_ENTRIES } from "@/data/mockEntries";
 import { normalizeDocument } from "@/lib/campaign";
 import type {
@@ -217,6 +223,16 @@ export function CampaignFlow({
         .filter(Boolean),
     [entriesWithResumableEntry],
   );
+
+  useEffect(() => {
+    const step = new URLSearchParams(window.location.search).get("step");
+
+    if (step === "registration") {
+      window.requestAnimationFrame(() => {
+        setCurrentStep("registration");
+      });
+    }
+  }, []);
 
   useLayoutEffect(() => {
     window.scrollTo(0, 0);

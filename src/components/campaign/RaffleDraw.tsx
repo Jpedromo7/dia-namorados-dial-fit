@@ -136,10 +136,10 @@ export function RaffleDraw({
   }
 
   return (
-    <section className="min-w-0 rounded-[1.6rem] border border-white/70 bg-white/82 p-5 shadow-xl shadow-[#5b1224]/8 backdrop-blur sm:p-6">
+    <section className="campaign-frame min-w-0 bg-white/86 p-5 backdrop-blur sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#fff0f3] px-4 py-2 text-sm font-semibold text-[#a4213d]">
+          <div className="inline-flex items-center gap-2 rounded-md border border-[#3b111c]/18 bg-[#fff0f3] px-4 py-2 text-sm font-semibold text-[#a4213d]">
             <Trophy size={16} aria-hidden="true" />
             Tela de sorteio
           </div>
@@ -157,7 +157,7 @@ export function RaffleDraw({
           type="button"
           onClick={drawWinners}
           disabled={!canDraw}
-          className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-full bg-[#0e8b4a] px-5 text-sm font-semibold text-white shadow-lg shadow-[#0e8b4a]/16 transition hover:-translate-y-0.5 hover:bg-[#0b723e] disabled:cursor-not-allowed disabled:bg-[#9db9a9] disabled:shadow-none disabled:hover:translate-y-0"
+          className="campaign-button inline-flex h-11 w-fit items-center justify-center gap-2 bg-[#0e8b4a] px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#9db9a9]"
         >
           <Shuffle size={17} aria-hidden="true" />
           {drawing
@@ -173,7 +173,7 @@ export function RaffleDraw({
           <h3 className="text-sm font-semibold text-[#3b111c]">
             Participantes validados
           </h3>
-          <div className="mt-3 max-h-72 overflow-auto rounded-[1.2rem] border border-[#ead0d6]">
+          <div className="mt-3 max-h-72 overflow-auto rounded-lg border-2 border-[#3b111c]">
             {validatedEntries.length > 0 ? (
               <ul className="divide-y divide-[#ead0d6] bg-white">
                 {validatedEntries.map((entry) => (
@@ -203,7 +203,7 @@ export function RaffleDraw({
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-[1.4rem] border border-[#f0d8a0] bg-[#fff8e8] p-5">
+        <div className="campaign-frame-soft relative overflow-hidden bg-[#fff8e8] p-5">
           <Sparkles
             className="absolute right-5 top-5 text-[#d8b55e]/46"
             size={28}
@@ -218,7 +218,7 @@ export function RaffleDraw({
                 {winners.map((winner, index) => (
                   <article
                     key={winner.id}
-                    className="rounded-[1.2rem] border border-[#f0d8a0] bg-white p-4 shadow-sm shadow-[#5b1224]/6"
+                    className="rounded-lg border-2 border-[#3b111c]/18 bg-white p-4 shadow-sm shadow-[#5b1224]/6"
                   >
                     <p className="text-xs font-semibold text-[#7a5b17]">
                       {index + 1}º casal
@@ -237,7 +237,7 @@ export function RaffleDraw({
                 <button
                   type="button"
                   onClick={copyNames}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#0e8b4a]/20 bg-white px-4 text-sm font-semibold text-[#0e8b4a] transition hover:-translate-y-0.5 hover:bg-[#f7fbf6]"
+                  className="campaign-button inline-flex h-11 items-center justify-center gap-2 bg-white px-4 text-sm font-semibold text-[#0e8b4a]"
                 >
                   <Clipboard size={17} aria-hidden="true" />
                   Copiar nomes
@@ -245,7 +245,7 @@ export function RaffleDraw({
                 <button
                   type="button"
                   onClick={downloadResult}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#0e8b4a]/20 bg-white px-4 text-sm font-semibold text-[#0e8b4a] transition hover:-translate-y-0.5 hover:bg-[#f7fbf6]"
+                  className="campaign-button inline-flex h-11 items-center justify-center gap-2 bg-white px-4 text-sm font-semibold text-[#0e8b4a]"
                 >
                   <Download size={17} aria-hidden="true" />
                   Baixar resultado

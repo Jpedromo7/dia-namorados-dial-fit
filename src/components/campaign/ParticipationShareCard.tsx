@@ -400,7 +400,7 @@ export function ParticipationShareCard({
   }
 
   return (
-    <section className="relative isolate overflow-hidden rounded-[2rem] border border-[#f4d190]/36 bg-[#3b111c] p-5 text-white shadow-2xl shadow-[#5b1224]/22 sm:p-6">
+    <section className="campaign-frame-gold relative isolate overflow-hidden bg-[#3b111c] p-5 text-white sm:p-6">
       <Image
         src={LOMBARDIA_FACADE_IMAGE}
         alt=""
@@ -409,8 +409,6 @@ export function ParticipationShareCard({
         className="object-cover"
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(44,9,20,0.26),rgba(44,9,20,0.76)_54%,rgba(23,7,12,0.95))]" />
-      <div className="absolute -right-12 top-16 h-48 w-48 rounded-full bg-[#f4d190]/12 blur-2xl" />
-      <div className="absolute -left-14 bottom-8 h-52 w-52 rounded-full bg-[#e9a2ae]/14 blur-2xl" />
       <Heart
         className="floating-romance absolute right-8 top-10 text-[#f5b8c3]/40"
         size={34}
@@ -428,7 +426,7 @@ export function ParticipationShareCard({
         }`}
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/14 px-4 py-2 text-sm font-semibold text-[#ffe7ad] backdrop-blur">
+          <div className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/14 px-4 py-2 text-sm font-semibold text-[#ffe7ad] backdrop-blur">
             <Camera size={16} aria-hidden="true" />
             Story pronto
           </div>
@@ -444,15 +442,15 @@ export function ParticipationShareCard({
         </div>
 
         <div className="mx-auto max-w-xl text-center">
-          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[#f4d190]/26 bg-white/12 px-4 py-2 text-sm font-semibold text-[#ffe7ad] backdrop-blur">
+          <div className="mx-auto inline-flex items-center gap-2 rounded-md border border-[#f4d190]/26 bg-white/12 px-4 py-2 text-sm font-semibold text-[#ffe7ad] backdrop-blur">
             <BadgeCheck size={16} aria-hidden="true" />
             Inscrição {entry?.raffleNumber ?? "001"} confirmada
           </div>
           {couplePhotoDataUrl ? (
-            <div className="mx-auto mt-5 h-44 w-44 overflow-hidden rounded-[2rem] border border-[#f4d190]/44 bg-white/12 p-1 shadow-2xl shadow-black/24 backdrop-blur sm:h-52 sm:w-52">
+            <div className="mx-auto mt-5 h-44 w-44 overflow-hidden rounded-lg border-2 border-[#f4d190]/44 bg-white/12 p-1 shadow-[6px_6px_0_rgba(0,0,0,0.42)] backdrop-blur sm:h-52 sm:w-52">
               <div
                 aria-label="Foto do casal"
-                className="h-full w-full rounded-[1.6rem] bg-cover bg-center"
+                className="h-full w-full rounded-md bg-cover bg-center"
                 role="img"
                 style={{ backgroundImage: `url(${couplePhotoDataUrl})` }}
               />
@@ -469,7 +467,7 @@ export function ParticipationShareCard({
             {getFirstTwoNames(studentName)} e{" "}
             {getFirstTwoNames(companionName)}
           </h2>
-          <p className="mt-4 whitespace-nowrap text-[clamp(0.78rem,2.25vw,1rem)] font-semibold text-[#ffe7ad]">
+          <p className="mt-4 text-sm font-semibold text-[#ffe7ad] sm:text-base">
             Dia dos Namorados Dial Fit e Lombardia
           </p>
           <p className="mx-auto mt-5 max-w-md text-sm leading-6 text-white/82 sm:text-base">
@@ -477,7 +475,7 @@ export function ParticipationShareCard({
           </p>
 
           <div className="mx-auto mt-6 grid max-w-md gap-3 sm:grid-cols-2">
-            <div className="rounded-[1.1rem] border border-white/14 bg-white/12 px-4 py-3 text-left backdrop-blur">
+            <div className="rounded-lg border border-white/18 bg-white/12 px-4 py-3 text-left backdrop-blur">
               <div className="flex items-center gap-2 text-[#ffe7ad]">
                 <Trophy size={16} aria-hidden="true" />
                 <span className="text-xs font-semibold">Sorteio</span>
@@ -486,7 +484,7 @@ export function ParticipationShareCard({
                 {WINNING_COUPLES_COUNT} casais vencedores
               </p>
             </div>
-            <div className="rounded-[1.1rem] border border-white/14 bg-white/12 px-4 py-3 text-left backdrop-blur">
+            <div className="rounded-lg border border-white/18 bg-white/12 px-4 py-3 text-left backdrop-blur">
               <div className="flex items-center gap-2 text-[#ffe7ad]">
                 <CalendarHeart size={16} aria-hidden="true" />
                 <span className="text-xs font-semibold">Jantar</span>
@@ -496,15 +494,13 @@ export function ParticipationShareCard({
               </p>
             </div>
           </div>
-          <div className="mx-auto mt-4 inline-flex flex-col items-center rounded-[1rem] border border-white/14 bg-white/10 px-5 py-3 backdrop-blur">
-            <Image
-              src={LOMBARDIA_LOGO}
-              alt="Lombardia Risotos e Massas"
-              width={146}
-              height={66}
-              className="lombardia-logo-clean mt-1 h-auto w-[118px]"
-            />
-          </div>
+          <Image
+            src={LOMBARDIA_LOGO}
+            alt="Lombardia Risotos e Massas"
+            width={146}
+            height={66}
+            className="lombardia-logo-clean mx-auto mt-5 h-auto w-[118px]"
+          />
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -512,7 +508,7 @@ export function ParticipationShareCard({
             href={INSTAGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-[3.15rem] items-center justify-center gap-2 rounded-full bg-[#0e8b4a] px-5 text-sm font-semibold text-white shadow-xl shadow-[#0e8b4a]/20 transition duration-300 hover:-translate-y-0.5 hover:bg-[#0b723e]"
+            className="campaign-button inline-flex h-[3.15rem] items-center justify-center gap-2 bg-[#0e8b4a] px-5 text-sm font-semibold text-white"
           >
             <Camera size={18} aria-hidden="true" />
             Abrir Instagram
@@ -520,7 +516,7 @@ export function ParticipationShareCard({
           <button
             type="button"
             onClick={handleDownload}
-            className="inline-flex h-[3.15rem] items-center justify-center gap-2 rounded-full border border-white/20 bg-white/14 px-5 text-sm font-semibold text-white shadow-sm shadow-black/10 backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:bg-white/20"
+            className="campaign-button inline-flex h-[3.15rem] items-center justify-center gap-2 border-white/70 bg-white/14 px-5 text-sm font-semibold text-white backdrop-blur hover:bg-white/20"
           >
             <Download size={18} aria-hidden="true" />
             Baixar story
@@ -533,9 +529,9 @@ export function ParticipationShareCard({
         <div
           role="status"
           aria-live="polite"
-          className={`animate-campaign-layer fixed bottom-5 left-4 right-4 z-50 flex items-start gap-3 rounded-[1.15rem] border px-4 py-3 text-left shadow-2xl backdrop-blur-xl sm:bottom-6 sm:left-auto sm:right-6 sm:w-[390px] ${toastStyles[toast.tone]}`}
+          className={`animate-campaign-layer fixed bottom-5 left-4 right-4 z-50 flex items-start gap-3 rounded-lg border-2 px-4 py-3 text-left shadow-2xl backdrop-blur-xl sm:bottom-6 sm:left-auto sm:right-6 sm:w-[390px] ${toastStyles[toast.tone]}`}
         >
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/72">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white/72">
             {toast.tone === "success" ? (
               <BadgeCheck size={18} aria-hidden="true" />
             ) : toast.tone === "loading" ? (
