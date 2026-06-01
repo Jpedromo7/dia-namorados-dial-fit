@@ -557,6 +557,59 @@ export async function updateCampaignEntryStatus(
   return mapEntryRow(data as CampaignEntryRow);
 }
 
+export async function deleteCampaignEntry(id: string) {
+  const entryId = cleanText(id, 80);
+
+  if (!entryId) {
+    throw new Error("Inscrição inválida.");
+  }
+
+  const supabase = createSupabaseAdminClient();
+
+  if (!supabase) {
+    if (!isDemoMode()) {
+      throw new Error("Banco da campanha não configurado.");
+    }
+
+    const entry = MOCK_CAMPAIGN_ENTRIES.find((item) => item.id === entryId);
+
+    if (!entry) {
+      throw new Error("Inscrição não encontrada.");
+    }
+
+    return { id: entryId };
+  }
+
+  const { data: raffleResult, error: raffleError } = await supabase
+    .from("raffle_results")
+    .select("id")
+    .eq("entry_id", entryId)
+    .maybeSingle();
+
+  if (raffleError) {
+    throw new Error("Não foi possível verificar o resultado do sorteio.");
+  }
+
+  if (raffleResult) {
+    throw new Error(
+      "Não é possível excluir uma inscrição que já está no resultado do sorteio.",
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("campaign_entries")
+    .delete()
+    .eq("id", entryId)
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error("Não foi possível excluir a inscrição.");
+  }
+
+  return { id: entryId };
+}
+
 function getRaffleEntryFromResult(row: RaffleResultRow) {
   const entry = Array.isArray(row.campaign_entries)
     ? row.campaign_entries[0]

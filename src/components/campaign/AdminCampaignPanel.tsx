@@ -6,6 +6,7 @@ import {
   Download,
   Filter,
   ShieldCheck,
+  Trash2,
   UsersRound,
   XCircle,
 } from "lucide-react";
@@ -17,6 +18,7 @@ import { RaffleDraw } from "./RaffleDraw";
 
 type UnitFilter = "Todas" | CampaignUnit;
 type StatusFilter = "Todos" | EntryStatus;
+type FeedbackMessage = { text: string; tone: "success" | "error" };
 
 const STATUS_OPTIONS: EntryStatus[] = [
   "Pendente",
@@ -104,7 +106,10 @@ export function AdminCampaignPanel({
   const [entries, setEntries] = useState<CampaignEntry[]>(initialEntries);
   const [unitFilter, setUnitFilter] = useState<UnitFilter>("Todas");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Todos");
-  const [statusMessage, setStatusMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState<FeedbackMessage | null>(
+    null,
+  );
+  const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
 
   const filteredEntries = useMemo(() => {
     return entries.filter((entry) => {
@@ -132,10 +137,13 @@ export function AdminCampaignPanel({
         entry.id === id ? { ...entry, status } : entry,
       ),
     );
-    setStatusMessage("");
+    setStatusMessage(null);
 
     if (!persistChanges) {
-      setStatusMessage("Status atualizado no modo demonstração.");
+      setStatusMessage({
+        text: "Status atualizado no modo demonstração.",
+        tone: "success",
+      });
       return;
     }
 
@@ -153,7 +161,10 @@ export function AdminCampaignPanel({
       } | null;
 
       setEntries(previousEntries);
-      setStatusMessage(data?.message ?? "Não foi possível salvar o status.");
+      setStatusMessage({
+        text: data?.message ?? "Não foi possível salvar o status.",
+        tone: "error",
+      });
       return;
     }
 
@@ -164,7 +175,69 @@ export function AdminCampaignPanel({
         currentEntry.id === entry.id ? entry : currentEntry,
       ),
     );
-    setStatusMessage("Status salvo no banco.");
+    setStatusMessage({ text: "Status salvo no banco.", tone: "success" });
+  }
+
+  async function deleteEntry(entry: CampaignEntry) {
+    const confirmed = window.confirm(
+      `Excluir a inscrição ${entry.raffleNumber} de ${entry.studentName}? Essa ação não pode ser desfeita.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const previousEntries = entries;
+    setDeletingEntryId(entry.id);
+    setStatusMessage(null);
+    setEntries((currentEntries) =>
+      currentEntries.filter((currentEntry) => currentEntry.id !== entry.id),
+    );
+
+    if (!persistChanges) {
+      setDeletingEntryId(null);
+      setStatusMessage({
+        text: "Inscrição excluída no modo demonstração.",
+        tone: "success",
+      });
+      return;
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(`/api/admin/entries/${entry.id}`, {
+        method: "DELETE",
+      });
+    } catch {
+      setDeletingEntryId(null);
+      setEntries(previousEntries);
+      setStatusMessage({
+        text: "Não foi possível conectar ao servidor para excluir a inscrição.",
+        tone: "error",
+      });
+      return;
+    }
+
+    setDeletingEntryId(null);
+
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+
+      setEntries(previousEntries);
+      setStatusMessage({
+        text: data?.message ?? "Não foi possível excluir a inscrição.",
+        tone: "error",
+      });
+      return;
+    }
+
+    setStatusMessage({
+      text: "Inscrição excluída do banco.",
+      tone: "success",
+    });
   }
 
   return (
@@ -299,7 +372,7 @@ export function AdminCampaignPanel({
         </div>
 
         <div className="mt-6 overflow-x-auto rounded-lg border-2 border-[#3b111c]">
-          <table className="min-w-[1180px] w-full border-collapse text-left text-sm">
+          <table className="min-w-[1280px] w-full border-collapse text-left text-sm">
             <thead className="bg-[#fff6f1] text-[#6f555d]">
               <tr>
                 <th className="px-4 py-3 font-semibold">Nº</th>
@@ -311,6 +384,7 @@ export function AdminCampaignPanel({
                 <th className="px-4 py-3 font-semibold">Unidade</th>
                 <th className="px-4 py-3 font-semibold">Criado em</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#ead0d6] bg-white">
@@ -365,14 +439,31 @@ export function AdminCampaignPanel({
                       ))}
                     </select>
                   </td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => deleteEntry(entry)}
+                      disabled={deletingEntryId === entry.id}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-md border-2 border-[#f1c0cc] bg-[#fff0f3] px-4 text-xs font-semibold text-[#a4213d] transition hover:border-[#a4213d]/40 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <Trash2 size={15} aria-hidden="true" />
+                      {deletingEntryId === entry.id ? "Excluindo" : "Excluir"}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         {statusMessage ? (
-          <p className="mt-3 text-sm font-semibold text-[#0e8b4a]">
-            {statusMessage}
+          <p
+            className={`mt-3 text-sm font-semibold ${
+              statusMessage.tone === "error"
+                ? "text-[#a4213d]"
+                : "text-[#0e8b4a]"
+            }`}
+          >
+            {statusMessage.text}
           </p>
         ) : null}
       </section>
