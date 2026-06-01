@@ -25,6 +25,9 @@ const STATUS_OPTIONS: EntryStatus[] = [
   "Validado",
   "Desclassificado",
 ];
+const LAST_ENTRY_STORAGE_KEY = "dialfit-campaign:last-entry";
+const LAST_PHOTO_STORAGE_KEY = "dialfit-campaign:last-couple-photo";
+const CAMPAIGN_STORAGE_EVENT = "dialfit-campaign:storage-change";
 
 const statusStyles: Record<EntryStatus, string> = {
   Pendente: "border-[#f0d8a0] bg-[#fff8e8] text-[#7a5b17]",
@@ -76,6 +79,42 @@ function getDuplicateDocuments(entries: CampaignEntry[]) {
   return [...counts.entries()]
     .filter(([, count]) => count > 1)
     .map(([documentValue]) => documentValue);
+}
+
+function clearMatchingStoredRegistration(entry: CampaignEntry) {
+  try {
+    const storedEntry = window.localStorage.getItem(LAST_ENTRY_STORAGE_KEY);
+
+    if (!storedEntry) {
+      return;
+    }
+
+    const parsedEntry = JSON.parse(storedEntry) as Partial<CampaignEntry>;
+    const storedDocuments = [
+      parsedEntry.studentDocument,
+      parsedEntry.companionDocument,
+    ]
+      .map((documentValue) => normalizeDocument(documentValue ?? ""))
+      .filter(Boolean);
+    const deletedDocuments = [entry.studentDocument, entry.companionDocument]
+      .map(normalizeDocument)
+      .filter(Boolean);
+    const isSameEntry =
+      parsedEntry.id === entry.id ||
+      storedDocuments.some((documentValue) =>
+        deletedDocuments.includes(documentValue),
+      );
+
+    if (!isSameEntry) {
+      return;
+    }
+
+    window.localStorage.removeItem(LAST_ENTRY_STORAGE_KEY);
+    window.localStorage.removeItem(LAST_PHOTO_STORAGE_KEY);
+    window.dispatchEvent(new Event(CAMPAIGN_STORAGE_EVENT));
+  } catch {
+    // Local cleanup is best-effort; the database delete remains authoritative.
+  }
 }
 
 function StatusBadge({ status }: { status: EntryStatus }) {
@@ -196,6 +235,7 @@ export function AdminCampaignPanel({
 
     if (!persistChanges) {
       setDeletingEntryId(null);
+      clearMatchingStoredRegistration(entry);
       setStatusMessage({
         text: "Inscrição excluída no modo demonstração.",
         tone: "success",
@@ -234,6 +274,7 @@ export function AdminCampaignPanel({
       return;
     }
 
+    clearMatchingStoredRegistration(entry);
     setStatusMessage({
       text: "Inscrição excluída do banco.",
       tone: "success",

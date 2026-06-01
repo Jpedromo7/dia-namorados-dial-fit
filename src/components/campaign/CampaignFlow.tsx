@@ -22,6 +22,7 @@ import { type CampaignStep, StepIndicator } from "./StepIndicator";
 
 const LAST_ENTRY_STORAGE_KEY = "dialfit-campaign:last-entry";
 const LAST_PHOTO_STORAGE_KEY = "dialfit-campaign:last-couple-photo";
+const CAMPAIGN_STORAGE_EVENT = "dialfit-campaign:storage-change";
 
 function isStoredCampaignEntry(value: unknown): value is CampaignEntry {
   if (!value || typeof value !== "object") {
@@ -60,9 +61,14 @@ function readStoredEntry() {
   }
 }
 
+function notifyCampaignStorageChange() {
+  window.dispatchEvent(new Event(CAMPAIGN_STORAGE_EVENT));
+}
+
 function storeEntry(entry: CampaignEntry) {
   try {
     window.localStorage.setItem(LAST_ENTRY_STORAGE_KEY, JSON.stringify(entry));
+    notifyCampaignStorageChange();
   } catch {
     // If storage is unavailable, the registration still succeeds normally.
   }
@@ -75,8 +81,20 @@ function storeCouplePhoto(photoDataUrl: string | null) {
     } else {
       window.localStorage.removeItem(LAST_PHOTO_STORAGE_KEY);
     }
+
+    notifyCampaignStorageChange();
   } catch {
     // The photo is optional; storage limits should not block the campaign flow.
+  }
+}
+
+function clearStoredRegistration() {
+  try {
+    window.localStorage.removeItem(LAST_ENTRY_STORAGE_KEY);
+    window.localStorage.removeItem(LAST_PHOTO_STORAGE_KEY);
+    notifyCampaignStorageChange();
+  } catch {
+    // Clearing local recovery data should not break the public page.
   }
 }
 
@@ -86,8 +104,12 @@ function subscribeToLocalStorage(onStoreChange: () => void) {
   }
 
   window.addEventListener("storage", onStoreChange);
+  window.addEventListener(CAMPAIGN_STORAGE_EVENT, onStoreChange);
 
-  return () => window.removeEventListener("storage", onStoreChange);
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(CAMPAIGN_STORAGE_EVENT, onStoreChange);
+  };
 }
 
 function getStoredEntrySnapshot() {
@@ -135,6 +157,13 @@ function findStoredEntryInList(
         entryHasDocument(entry, storedEntry.companionDocument),
     ) ??
     storedEntry
+  );
+}
+
+function getVerifiableDocument(entry: CampaignEntry) {
+  return (
+    normalizeDocument(entry.studentDocument) ||
+    normalizeDocument(entry.companionDocument)
   );
 }
 
@@ -237,6 +266,90 @@ export function CampaignFlow({
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
   }, [currentStep]);
+
+  useEffect(() => {
+    const resetDeletedStoredEntry = () => {
+      if (readStoredEntry()) {
+        return;
+      }
+
+      setLatestEntry(null);
+      setLatestCouplePhotoDataUrl(null);
+      setEntries(initialEntries);
+
+      if (currentStep === "confirmation") {
+        setCurrentStep("presentation");
+      }
+    };
+
+    window.addEventListener("storage", resetDeletedStoredEntry);
+    window.addEventListener(CAMPAIGN_STORAGE_EVENT, resetDeletedStoredEntry);
+
+    return () => {
+      window.removeEventListener("storage", resetDeletedStoredEntry);
+      window.removeEventListener(
+        CAMPAIGN_STORAGE_EVENT,
+        resetDeletedStoredEntry,
+      );
+    };
+  }, [currentStep, initialEntries]);
+
+  useEffect(() => {
+    if (!storedEntry) {
+      return;
+    }
+
+    const isStillListed = initialEntries.some(
+      (entry) => entry.id === storedEntry.id,
+    );
+
+    if (isStillListed) {
+      return;
+    }
+
+    const document = getVerifiableDocument(storedEntry);
+
+    if (!document) {
+      clearStoredRegistration();
+      return;
+    }
+
+    const controller = new AbortController();
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/campaign/entries/lookup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ document }),
+          signal: controller.signal,
+        });
+
+        if (response.status === 404 || response.status === 400) {
+          clearStoredRegistration();
+          return;
+        }
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = (await response.json()) as { entry?: CampaignEntry };
+
+        if (data.entry?.id && data.entry.id !== storedEntry.id) {
+          clearStoredRegistration();
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+      }
+    })();
+
+    return () => controller.abort();
+  }, [initialEntries, storedEntry]);
 
   function resetViewport() {
     window.scrollTo(0, 0);
