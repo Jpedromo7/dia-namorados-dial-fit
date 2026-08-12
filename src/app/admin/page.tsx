@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminCampaignPanel } from "@/components/campaign/AdminCampaignPanel";
-import { CAMPAIGN_NAME, DIALFIT_LOGO, DRAW_DATE_LABEL } from "@/config/campaign";
+import { CAMPAIGN_KICKER, CAMPAIGN_NAME, DIALFIT_LOGO, DRAW_DATE_LABEL } from "@/config/campaign";
 import { MOCK_CAMPAIGN_ENTRIES } from "@/data/mockEntries";
 import { getCurrentAdmin, getAdminEmails } from "@/lib/admin-auth";
 import { getAdminCampaignEntries } from "@/lib/campaign-db";
@@ -40,7 +40,7 @@ export default async function AdminPage() {
 
         <section className="campaign-frame p-6 sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#55e814]"><ShieldCheck size={16} /> Administração</p><h1 className="mt-3 text-4xl font-black text-white sm:text-6xl">{CAMPAIGN_NAME}</h1><p className="mt-3 text-[#a8b2aa]">Validação dos pais alunos, exportação e sorteio do combo de prêmios.</p></div>
+            <div><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#55e814]"><ShieldCheck size={16} /> Administração</p><h1 className="mt-3 text-4xl font-black text-white sm:text-6xl">{CAMPAIGN_NAME}</h1><p className="mt-3 text-sm font-black uppercase tracking-[0.14em] text-[#55e814]">{CAMPAIGN_KICKER}</p><p className="mt-3 text-[#a8b2aa]">Validação dos pais alunos, exportação e sorteio do combo de prêmios.</p></div>
             <div className="campaign-frame-soft p-4"><p className="flex items-center gap-2 font-bold text-white"><Database size={17} className="text-[#55e814]" /> {configured ? "Banco conectado" : "Modo demonstração"}</p><p className="mt-2 text-xs text-[#a8b2aa]">{configured ? admin?.email : "Dados de exemplo"}</p></div>
           </div>
           <div className="mt-7 grid gap-3 sm:grid-cols-2"><div className="campaign-frame-soft p-4"><p className="text-xs font-bold uppercase tracking-[0.12em] text-[#55e814]">Sorteio</p><p className="mt-2 font-bold text-white">{DRAW_DATE_LABEL}</p></div><div className="campaign-frame-soft p-4"><p className="text-xs font-bold uppercase tracking-[0.12em] text-[#55e814]">Premiação</p><p className="mt-2 font-bold text-white">1 combo · 1 vencedor</p></div></div>

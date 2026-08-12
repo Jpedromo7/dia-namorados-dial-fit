@@ -26,6 +26,9 @@ export default function AppleIcon() {
         <div style={{ marginTop: 4, color: "#55e814", fontSize: 15, fontWeight: 800, letterSpacing: 3 }}>
           DIA DOS PAIS
         </div>
+        <div style={{ marginTop: 5, color: "white", fontSize: 8, fontWeight: 800, letterSpacing: 1.4 }}>
+          PAI FORTE • FAMÍLIA FORTE
+        </div>
       </div>
     ),
     size,

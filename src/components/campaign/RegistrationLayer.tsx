@@ -3,7 +3,7 @@
 import { ArrowLeft, Check, Loader2, ShieldCheck, UserRound } from "lucide-react";
 import Image from "next/image";
 import { FormEvent, useMemo, useState } from "react";
-import { DIALFIT_LOGO, DRAW_DATE_LABEL } from "@/config/campaign";
+import { CAMPAIGN_KICKER, DIALFIT_LOGO, DRAW_DATE_LABEL } from "@/config/campaign";
 import { normalizeDocument } from "@/lib/campaign";
 import type { CampaignUnit, RegistrationPayload } from "@/types/campaign";
 import { ReviewUnitsSection } from "./ReviewUnitsSection";
@@ -127,6 +127,7 @@ export function RegistrationLayer({
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#55e814]">Inscrição individual</p>
               <h1 className="mt-2 text-3xl font-extrabold text-white sm:text-4xl">Dados do pai/aluno</h1>
+              <p className="mt-2 text-xs font-black uppercase tracking-[0.14em] text-[#55e814]">{CAMPAIGN_KICKER}</p>
               <p className="mt-2 text-sm leading-6 text-[#a8b2aa]">Somente o pai que é aluno da Dial Fit precisa se cadastrar.</p>
             </div>
           </div>

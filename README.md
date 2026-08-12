@@ -1,5 +1,7 @@
 # Dia dos Pais Dial Fit
 
+**Pai forte. Família forte.**
+
 Campanha de sorteio exclusiva para pais que sejam alunos ativos da Dial Fit.
 Cada participante realiza a própria inscrição, confirma a avaliação e recebe um
 número da sorte após aceitar o regulamento.

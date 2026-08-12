@@ -135,9 +135,5 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; }
-  .hero-rain-item { animation: none !important; transform: rotate(-12deg); }
-  .hero-rain-item:nth-child(4n + 1) { top: 8%; }
-  .hero-rain-item:nth-child(4n + 2) { top: 31%; }
-  .hero-rain-item:nth-child(4n + 3) { top: 56%; }
-  .hero-rain-item:nth-child(4n + 4) { top: 79%; }
+  .hero-rain-item { animation-duration: 14s !important; }
 }

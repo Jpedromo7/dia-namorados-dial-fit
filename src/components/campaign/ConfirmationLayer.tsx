@@ -3,7 +3,7 @@
 import { ArrowLeft, Check, Copy, Dumbbell, Gift, Share2, ShieldCheck, SprayCan, Stethoscope, Trophy } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { CAMPAIGN_NAME, DIALFIT_LOGO, DRAW_DATE_LABEL, PRIZES } from "@/config/campaign";
+import { CAMPAIGN_KICKER, CAMPAIGN_NAME, DIALFIT_LOGO, DRAW_DATE_LABEL, PRIZES } from "@/config/campaign";
 import type { CampaignEntry } from "@/types/campaign";
 
 const prizeIcons = [Dumbbell, Stethoscope, SprayCan];
@@ -21,7 +21,7 @@ export function ConfirmationLayer({
   const winner = raffleWinners[0];
 
   async function share() {
-    const text = `Estou participando do sorteio de Dia dos Pais da Dial Fit. Meu número é ${latestEntry?.raffleNumber ?? "---"}.`;
+    const text = `${CAMPAIGN_KICKER} Estou participando do sorteio de Dia dos Pais da Dial Fit. Meu número é ${latestEntry?.raffleNumber ?? "---"}.`;
     if (navigator.share) {
       await navigator.share({ title: CAMPAIGN_NAME, text, url: window.location.origin });
       return;
@@ -47,6 +47,7 @@ export function ConfirmationLayer({
             <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#a8b2aa]">Número da sorte</p>
             <p className="display-condensed mt-2 text-8xl leading-none text-[#55e814]">{latestEntry?.raffleNumber ?? "---"}</p>
             <p className="mt-5 text-xl font-bold text-white">{latestEntry?.studentName ?? "Pai aluno Dial Fit"}</p>
+            <p className="mt-2 text-xs font-black uppercase tracking-[0.14em] text-[#55e814]">{CAMPAIGN_KICKER}</p>
             <div className="mt-5 flex items-start gap-3 rounded-xl border border-[#55e814]/25 bg-[#55e814]/7 p-4">
               <ShieldCheck className="mt-0.5 shrink-0 text-[#55e814]" size={20} />
               <div><p className="font-bold text-white">Status: {latestEntry?.status ?? "Pendente"}</p><p className="mt-1 text-sm leading-6 text-[#a8b2aa]">A equipe Dial Fit validará seu vínculo de aluno ativo antes do sorteio.</p></div>

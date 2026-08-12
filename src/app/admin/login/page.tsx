@@ -3,7 +3,7 @@ import { ArrowLeft, LockKeyhole } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { AdminLogin } from "@/components/campaign/AdminLogin";
-import { DIALFIT_LOGO } from "@/config/campaign";
+import { CAMPAIGN_KICKER, DIALFIT_LOGO } from "@/config/campaign";
 import {
   hasSupabasePublicConfig,
   createSupabaseServerClient,
@@ -68,6 +68,7 @@ export default async function AdminLoginPage({
             <LockKeyhole size={16} aria-hidden="true" />
             Painel administrativo
           </p>
+          <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-[#55e814]">{CAMPAIGN_KICKER}</p>
           <h1 className="mt-3 text-4xl font-black leading-tight text-white">
             Acesso restrito
           </h1>

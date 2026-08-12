@@ -3,6 +3,7 @@ import { ArrowLeft, FileCheck2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  CAMPAIGN_KICKER,
   CAMPAIGN_NAME,
   DIALFIT_LOGO,
   DRAW_DATE_LABEL,
@@ -78,6 +79,7 @@ export default function RulesPage() {
             <p className="mt-5 text-xs font-black uppercase tracking-[0.18em]">Termos de participação</p>
             <h1 className="mt-2 text-4xl font-black sm:text-5xl">Regulamento oficial</h1>
             <p className="mt-3 font-semibold">{CAMPAIGN_NAME}</p>
+            <p className="mt-1 text-sm font-black uppercase tracking-[0.14em]">{CAMPAIGN_KICKER}</p>
           </div>
           <div className="grid gap-7 p-6 sm:p-9">
             {sections.map((section) => (
