@@ -102,6 +102,31 @@ body {
   opacity: 0.34;
 }
 
+.hero-symbol-rain {
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, transparent, black 10%, black 88%, transparent);
+}
+
+.hero-rain-item {
+  position: absolute;
+  top: -18%;
+  display: grid;
+  place-items: center;
+  color: rgba(85, 232, 20, 0.34);
+  filter: drop-shadow(0 0 12px rgba(85, 232, 20, 0.2));
+  animation: hero-symbol-fall 14s linear infinite;
+  will-change: transform;
+}
+
+.hero-rain-item-1 { opacity: 0.42; }
+.hero-rain-item-2 { opacity: 0.5; }
+
+@keyframes hero-symbol-fall {
+  0% { transform: translate3d(-18px, -12vh, 0) rotate(-18deg); }
+  50% { transform: translate3d(22px, 58vh, 0) rotate(150deg); }
+  100% { transform: translate3d(-8px, 124vh, 0) rotate(330deg); }
+}
+
 @keyframes campaign-layer-in {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
@@ -110,4 +135,9 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; }
+  .hero-rain-item { animation: none !important; transform: rotate(-12deg); }
+  .hero-rain-item:nth-child(4n + 1) { top: 8%; }
+  .hero-rain-item:nth-child(4n + 2) { top: 31%; }
+  .hero-rain-item:nth-child(4n + 3) { top: 56%; }
+  .hero-rain-item:nth-child(4n + 4) { top: 79%; }
 }

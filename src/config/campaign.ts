@@ -1,6 +1,6 @@
 export const CAMPAIGN_SLUG = "dia-dos-pais-2026";
 export const CAMPAIGN_NAME = "Dia dos Pais Dial Fit";
-export const CAMPAIGN_KICKER = "Força que inspira. Cuidado que transforma.";
+export const CAMPAIGN_KICKER = "Pai forte. Família forte.";
 export const CAMPAIGN_SUBTITLE =
   "Pai que treina, inspira. Participe do sorteio especial da Dial Fit.";
 export const CAMPAIGN_COMPLEMENT =

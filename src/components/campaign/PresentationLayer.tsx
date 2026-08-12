@@ -28,6 +28,23 @@ import {
 
 const prizeIcons = [Dumbbell, Stethoscope, SprayCan];
 
+const heroRainItems = [
+  { kind: "dumbbell", left: "3%", delay: "-2s", duration: "11s", size: 30 },
+  { kind: "biceps", left: "10%", delay: "-8s", duration: "15s", size: 30 },
+  { kind: "heart", left: "17%", delay: "-5s", duration: "12s", size: 25 },
+  { kind: "dumbbell", left: "24%", delay: "-11s", duration: "17s", size: 22 },
+  { kind: "biceps", left: "31%", delay: "-1s", duration: "13s", size: 25 },
+  { kind: "heart", left: "38%", delay: "-9s", duration: "14s", size: 22 },
+  { kind: "dumbbell", left: "46%", delay: "-4s", duration: "12s", size: 28 },
+  { kind: "biceps", left: "53%", delay: "-13s", duration: "18s", size: 28 },
+  { kind: "heart", left: "60%", delay: "-7s", duration: "13s", size: 27 },
+  { kind: "dumbbell", left: "67%", delay: "-3s", duration: "16s", size: 24 },
+  { kind: "biceps", left: "74%", delay: "-10s", duration: "14s", size: 24 },
+  { kind: "heart", left: "81%", delay: "-6s", duration: "16s", size: 23 },
+  { kind: "dumbbell", left: "88%", delay: "-12s", duration: "15s", size: 32 },
+  { kind: "biceps", left: "95%", delay: "-4s", duration: "17s", size: 27 },
+] as const;
+
 export function PresentationLayer({
   hasStoredRegistration,
   onLookupRegistration,
@@ -74,14 +91,38 @@ export function PresentationLayer({
         </Link>
       </header>
 
-      <section className="grid gap-12 py-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:py-20">
-        <div>
+      <section className="relative isolate grid gap-12 overflow-hidden py-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:py-20">
+        <div className="hero-symbol-rain pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+          {heroRainItems.map((item, index) => (
+            <span
+              key={`${item.kind}-${item.left}`}
+              className={`hero-rain-item hero-rain-item-${index % 3}`}
+              style={{
+                left: item.left,
+                animationDelay: item.delay,
+                animationDuration: item.duration,
+                fontSize: item.size,
+              }}
+            >
+              {item.kind === "dumbbell" ? (
+                <Dumbbell size={item.size} strokeWidth={2.4} />
+              ) : item.kind === "biceps" ? (
+                "💪"
+              ) : (
+                "💚"
+              )}
+            </span>
+          ))}
+        </div>
+
+        <div className="relative z-10 lg:pr-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#55e814]/35 bg-[#55e814]/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-[#74f23d]">
             <Sparkles size={14} /> Campanha oficial Dial Fit
           </div>
           <p className="mt-7 text-sm font-bold uppercase tracking-[0.22em] text-white/58">{CAMPAIGN_KICKER}</p>
-          <h1 className="display-condensed mt-4 max-w-3xl text-[clamp(3.8rem,12vw,9.4rem)] leading-[0.88] text-white">
-            Dia dos <span className="mt-2 block text-[#55e814]">Pais</span>
+          <h1 className="display-condensed mt-4 max-w-3xl leading-[0.78] text-white">
+            <span className="block text-[clamp(4.6rem,14vw,10.8rem)]">Dia dos</span>
+            <span className="mt-3 block text-[clamp(6.3rem,19vw,14.2rem)] text-[#55e814]">Pais</span>
           </h1>
           <p className="mt-8 max-w-xl text-xl font-semibold leading-8 text-white sm:text-2xl">{CAMPAIGN_SUBTITLE}</p>
           <p className="mt-4 max-w-xl text-base leading-7 text-[#a8b2aa]">{CAMPAIGN_COMPLEMENT}</p>
@@ -114,7 +155,7 @@ export function PresentationLayer({
           ) : null}
         </div>
 
-        <aside className="relative">
+        <aside className="relative z-10 mt-12 lg:mt-0">
           <div className="hero-slash -left-24 top-12" />
           <div className="campaign-frame relative overflow-hidden p-5 sm:p-7">
             <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#55e814]/16 blur-3xl" />
