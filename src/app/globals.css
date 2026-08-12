@@ -135,5 +135,10 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; }
-  .hero-rain-item { animation-duration: 14s !important; }
+  .hero-rain-item {
+    animation-name: hero-symbol-fall !important;
+    animation-duration: 14s !important;
+    animation-timing-function: linear !important;
+    animation-iteration-count: infinite !important;
+  }
 }
