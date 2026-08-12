@@ -1,20 +1,25 @@
-# Dia dos Namorados Dial Fit
+# Dia dos Pais Dial Fit
 
-Página de campanha da Dial Fit para cadastro de alunos ativos no sorteio de Dia dos Namorados. O prêmio divulgado é um jantar para casal no Restaurante Lombardia.
+Campanha de sorteio exclusiva para pais que sejam alunos ativos da Dial Fit.
+Cada participante realiza a própria inscrição, confirma a avaliação e recebe um
+número da sorte após aceitar o regulamento.
 
 ## Rotas
 
-- `/` - página pública da campanha, com hero, contador, prêmio, formulário, CTA de avaliação, aceite do regulamento e lista pública segura.
-- `/admin` - painel administrativo inicial com dados mockados, filtro por unidade, edição de status, exportação CSV e sorteio.
+- `/` — apresentação, inscrição individual e confirmação.
+- `/regulamento` — termos completos da campanha.
+- `/admin` — validação de alunos, exportação e sorteio.
 
-## Configuração rápida
+## Prêmio
 
-As principais constantes da campanha ficam em `src/config/campaign.ts`:
+Um pai vencedor recebe um combo com creatina da RR Suplementos, consulta online
+com a Dra. Dayanne Botelho e kit de limpeza da Mult Limpo.
 
-- `DRAW_DATE`
-- `DIAL_FIT_GOOGLE_REVIEW_URL`
-- `DIAL_BEACH_GOOGLE_REVIEW_URL`
-- `CAMPAIGN_RULES_URL`
+## Banco de dados
+
+A migração `20260812000000_fathers_day_campaign.sql` preserva os registros da
+campanha anterior, identifica cada edição pelo campo `campaign_slug` e permite
+uma inscrição por CPF em cada campanha.
 
 Crie um `.env.local` com:
 
@@ -23,29 +28,11 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 ADMIN_EMAILS=
+CAMPAIGN_DEMO_MODE=false
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` fica somente no servidor. Nunca use essa chave em
-componentes client-side nem exponha no navegador.
-
-No Supabase Auth, adicione os redirects locais:
-
-```txt
-http://localhost:3025/**
-http://localhost:3025/auth/callback
-```
-
-Para produção, troque `localhost` pelo domínio publicado.
-
-## Segurança
-
-- As rotas públicas retornam somente número de inscrição e nomes abreviados.
-- CPF, e-mail e telefone ficam restritos ao servidor/admin.
-- As APIs POST/PATCH validam origem, tamanho do JSON, limite de tentativas e
-  campos obrigatórios.
-- O painel admin envia magic link apenas pelo servidor e valida `ADMIN_EMAILS`.
-- As migrações do Supabase habilitam RLS e revogam acesso direto de
-  `anon`/`authenticated` às tabelas da campanha.
+O modo de demonstração só deve ser ativado localmente com
+`CAMPAIGN_DEMO_MODE=true`; nele, os cadastros não são persistidos.
 
 ## Desenvolvimento
 
@@ -54,13 +41,9 @@ npm install
 npm run dev -- --port 3025
 ```
 
-Abra `http://localhost:3025`.
-
-## Verificação
+Verificações:
 
 ```bash
 npm run lint
 npm run build
 ```
-
-O projeto usa Next.js, TypeScript, Tailwind CSS e componentes React organizados por campanha em `src/components/campaign`.

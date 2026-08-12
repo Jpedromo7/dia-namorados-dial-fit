@@ -1,61 +1,48 @@
-export const CAMPAIGN_NAME = "Dia dos Namorados Dial Fit";
+export const CAMPAIGN_SLUG = "dia-dos-pais-2026";
+export const CAMPAIGN_NAME = "Dia dos Pais Dial Fit";
+export const CAMPAIGN_KICKER = "Força que inspira. Cuidado que transforma.";
 export const CAMPAIGN_SUBTITLE =
-  "Concorra a um jantar especial para casal no Restaurante Lombardia.";
+  "Pai que treina, inspira. Participe do sorteio especial da Dial Fit.";
 export const CAMPAIGN_COMPLEMENT =
-  "Participação exclusiva para alunos ativos dos planos anuais da Dial Fit: plano anual ou plano anual recorrente. Plano mensal não participa.";
-export const WINNING_COUPLES_COUNT = 2;
+  "Participação exclusiva para pais que sejam alunos ativos da Dial Fit. Uma inscrição por CPF.";
+
+export const WINNERS_COUNT = 1;
+export const DRAW_DATE = "2026-08-14T18:00:00-03:00";
+export const DRAW_DATE_LABEL = "14 de agosto de 2026, às 18h";
+export const REGISTRATION_END_LABEL = "14 de agosto de 2026, às 17h59";
 
 export const DIALFIT_LOGO = "/campanha-namorados/dialfit-logo.png";
-export const LOMBARDIA_LOGO = "/campanha-namorados/lombardia-logo.png";
-export const LOMBARDIA_HERO_IMAGE =
-  "/campanha-namorados/lombardia-hero.jpg";
-export const LOMBARDIA_WINE_IMAGE =
-  "/campanha-namorados/lombardia-vinho.jpg";
-export const LOMBARDIA_FACADE_IMAGE =
-  "/campanha-namorados/lombardia-fachada.jpg";
-export const LOMBARDIA_SALAO_IMAGE =
-  "/campanha-namorados/lombardia-salao.jpg";
-
-export const DRAW_DATE = "2026-06-12T18:00:00-03:00";
-export const DRAW_DATE_LABEL = "12 de junho de 2026, às 18h";
-
-export const PRIZE_DINNER_DATE = "2026-06-18";
-export const PRIZE_DINNER_DATE_LABEL = "18 de junho de 2026";
-
 export const DIAL_FIT_GOOGLE_REVIEW_URL =
   "https://www.google.com/maps/search/?api=1&query=Dial%20Fit%20Academia";
-export const CAMPAIGN_RULES_URL =
-  "/campanha-namorados/regulamento-dia-dos-namorados-dial-fit.pdf";
+export const CAMPAIGN_RULES_URL = "/regulamento";
 
 export const CAMPAIGN_UNITS = ["Dial Fit"] as const;
 
-/*
-Banco de dados futuro sugerido para Supabase:
+export const PRIZES = [
+  {
+    title: "Creatina",
+    partner: "RR Suplementos",
+    description: "1 unidade de creatina para reforçar a rotina de treino.",
+  },
+  {
+    title: "Consulta online",
+    partner: "Dra. Dayanne Botelho",
+    description: "1 consulta online com acompanhamento profissional.",
+  },
+  {
+    title: "Kit de limpeza",
+    partner: "Mult Limpo",
+    description: "1 kit especial de produtos de limpeza.",
+  },
+] as const;
 
-campaign_entries:
-- id
-- student_name
-- student_email
-- student_phone
-- student_document
-- unit
-- companion_name
-- companion_document
-- companion_phone
-- companion_email
-- review_unit
-- completed_review
-- status
-- accepted_terms
-- accepted_terms_at
-- created_at
-- raffle_number
-
-campaign_settings:
-- id
-- campaign_name
-- draw_date
-- rules_url
-- dial_fit_review_url
-- dial_beach_review_url
-*/
+// Compatibilidade temporária para componentes legados que não fazem mais parte
+// do fluxo público. Eles podem ser removidos em uma limpeza posterior.
+export const WINNING_COUPLES_COUNT = WINNERS_COUNT;
+export const PRIZE_DINNER_DATE = "2026-08-14";
+export const PRIZE_DINNER_DATE_LABEL = "14 de agosto de 2026";
+export const LOMBARDIA_LOGO = DIALFIT_LOGO;
+export const LOMBARDIA_HERO_IMAGE = "/romantic-dinner-campaign.png";
+export const LOMBARDIA_WINE_IMAGE = "/romantic-dinner-campaign.png";
+export const LOMBARDIA_FACADE_IMAGE = "/romantic-dinner-campaign.png";
+export const LOMBARDIA_SALAO_IMAGE = "/romantic-dinner-campaign.png";

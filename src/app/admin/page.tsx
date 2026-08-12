@@ -4,13 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminCampaignPanel } from "@/components/campaign/AdminCampaignPanel";
-import {
-  CAMPAIGN_NAME,
-  DIALFIT_LOGO,
-  DRAW_DATE_LABEL,
-  PRIZE_DINNER_DATE_LABEL,
-  WINNING_COUPLES_COUNT,
-} from "@/config/campaign";
+import { CAMPAIGN_NAME, DIALFIT_LOGO, DRAW_DATE_LABEL } from "@/config/campaign";
 import { MOCK_CAMPAIGN_ENTRIES } from "@/data/mockEntries";
 import { getCurrentAdmin, getAdminEmails } from "@/lib/admin-auth";
 import { getAdminCampaignEntries } from "@/lib/campaign-db";
@@ -18,141 +12,40 @@ import { hasSupabaseAdminConfig } from "@/lib/supabase/admin";
 import { hasSupabasePublicConfig } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
-
-export const metadata: Metadata = {
-  title: "Admin | Dia dos Namorados Dial Fit",
-  description: "Painel administrativo da campanha Dia dos Namorados Dial Fit.",
-};
+export const metadata: Metadata = { title: `Admin | ${CAMPAIGN_NAME}`, description: "Painel administrativo da campanha de Dia dos Pais." };
 
 export default async function AdminPage() {
-  const configured =
-    hasSupabasePublicConfig() &&
-    hasSupabaseAdminConfig() &&
-    getAdminEmails().length > 0;
+  const configured = hasSupabasePublicConfig() && hasSupabaseAdminConfig() && getAdminEmails().length > 0;
   const admin = await getCurrentAdmin();
-
-  if (configured && !admin) {
-    redirect("/admin/login");
-  }
+  if (configured && !admin) redirect("/admin/login");
 
   let initialEntries = configured ? [] : MOCK_CAMPAIGN_ENTRIES;
-  let databaseErrorMessage = "";
-
+  let databaseError = "";
   if (configured) {
-    try {
-      initialEntries = await getAdminCampaignEntries();
-    } catch {
-      databaseErrorMessage =
-        "Login autorizado, mas o banco da campanha não abriu. Confira se a SUPABASE_SERVICE_ROLE_KEY do Vercel pertence ao projeto Supabase atual e se as tabelas da campanha foram criadas.";
-    }
+    try { initialEntries = await getAdminCampaignEntries(); }
+    catch { databaseError = "O banco não respondeu. Confira a conexão e aplique a nova migração da campanha de Dia dos Pais."; }
   }
 
   return (
-    <main className="campaign-bg min-h-screen px-5 py-6 text-[#1f1719] sm:px-6 lg:py-8">
-      <div className="pointer-events-none fixed inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,rgba(255,255,255,0.78),transparent)]" />
-      <div className="relative mx-auto grid w-full min-w-0 max-w-7xl gap-8">
-        <header className="campaign-frame flex min-w-0 flex-col gap-5 bg-white/90 p-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:p-5">
-          <Link href="/" aria-label="Voltar para a campanha">
-            <Image
-              src={DIALFIT_LOGO}
-              alt="Dial Fit Academia"
-              width={165}
-              height={54}
-              priority
-              className="dialfit-logo-clean h-auto w-[148px] sm:w-[165px]"
-            />
-          </Link>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link
-              href="/"
-              className="campaign-button inline-flex h-11 w-fit items-center justify-center gap-2 bg-white px-5 text-sm font-semibold text-[#0e8b4a]"
-            >
-              Ver página pública
-              <ArrowUpRight size={16} aria-hidden="true" />
-            </Link>
-            {configured ? (
-              <form action="/auth/sign-out" method="post">
-                <button
-                  type="submit"
-                  className="campaign-button inline-flex h-11 w-fit items-center justify-center gap-2 bg-[#5b1224] px-5 text-sm font-semibold text-white"
-                >
-                  <LogOut size={16} aria-hidden="true" />
-                  Sair
-                </button>
-              </form>
-            ) : null}
-          </div>
+    <main className="campaign-bg relative min-h-screen px-5 py-7 text-white sm:px-7">
+      <div className="campaign-grid pointer-events-none fixed inset-0" />
+      <div className="relative mx-auto grid max-w-7xl gap-7">
+        <header className="flex flex-col gap-5 border-b border-white/10 pb-6 sm:flex-row sm:items-center sm:justify-between">
+          <Link href="/"><Image src={DIALFIT_LOGO} alt="Dial Fit" width={2048} height={696} style={{ height: "auto" }} className="dialfit-logo-clean w-[150px]" /></Link>
+          <div className="flex gap-3"><Link href="/" className="campaign-button inline-flex h-11 items-center gap-2 bg-[#111813] px-5 text-sm font-bold text-white">Ver campanha <ArrowUpRight size={16} /></Link>{configured ? <form action="/auth/sign-out" method="post"><button className="campaign-button inline-flex h-11 items-center gap-2 border-[#ff7d7d]/40 bg-[#ff7d7d]/8 px-5 text-sm font-bold text-[#ff9c9c]"><LogOut size={16} /> Sair</button></form> : null}</div>
         </header>
 
-        {!configured ? (
-          <div className="campaign-frame-soft bg-[#fff0f3]/92 p-4 text-sm font-semibold leading-6 text-[#a4213d]">
-            Admin em modo demonstração. Configure Supabase, Service Role e
-            ADMIN_EMAILS para ativar banco real, login restrito e sorteio
-            persistido.
-          </div>
-        ) : null}
+        {!configured ? <div className="rounded-xl border border-[#f4c85d]/30 bg-[#f4c85d]/8 p-4 text-sm font-semibold text-[#f4d780]">Painel em modo demonstração. Os dados são locais e não serão persistidos.</div> : null}
+        {databaseError ? <div className="rounded-xl border border-[#ff7d7d]/30 bg-[#ff7d7d]/8 p-4 text-sm font-semibold text-[#ff9c9c]">{databaseError}</div> : null}
 
-        {databaseErrorMessage ? (
-          <div className="campaign-frame-soft bg-[#fff0f3]/92 p-4 text-sm font-semibold leading-6 text-[#a4213d]">
-            {databaseErrorMessage}
-          </div>
-        ) : null}
-
-        <section className="campaign-frame min-w-0 overflow-hidden bg-white/88 p-5 backdrop-blur-xl sm:p-7">
+        <section className="campaign-frame p-6 sm:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="min-w-0 max-w-3xl">
-              <p className="inline-flex items-center gap-2 rounded-md border border-[#3b111c]/18 bg-[#e7f7ed] px-4 py-2 text-sm font-semibold text-[#0e8b4a]">
-                <ShieldCheck size={16} aria-hidden="true" />
-                Painel administrativo
-              </p>
-              <h1 className="font-display mt-4 text-[clamp(2.25rem,5vw,4.25rem)] font-semibold leading-tight text-[#3b111c]">
-              {CAMPAIGN_NAME}
-              </h1>
-              <p className="mt-3 max-w-2xl text-base leading-7 text-[#6f555d]">
-                Validação das inscrições, controle por CPF, exportação e sorteio
-                dos {WINNING_COUPLES_COUNT} casais vencedores.
-              </p>
-            </div>
-
-            <div className="campaign-frame-soft bg-[#fffaf8]/90 p-4">
-              <p className="inline-flex items-center gap-2 text-sm font-semibold text-[#5b1224]">
-                <Database size={16} aria-hidden="true" />
-                {configured ? "Banco conectado" : "Modo demonstração"}
-              </p>
-              <p className="mt-1 text-xs font-medium text-[#7a5f67]">
-                {configured
-                  ? admin?.email
-                  : "Dados locais para conferência visual"}
-              </p>
-            </div>
+            <div><p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#55e814]"><ShieldCheck size={16} /> Administração</p><h1 className="mt-3 text-4xl font-black text-white sm:text-6xl">{CAMPAIGN_NAME}</h1><p className="mt-3 text-[#a8b2aa]">Validação dos pais alunos, exportação e sorteio do combo de prêmios.</p></div>
+            <div className="campaign-frame-soft p-4"><p className="flex items-center gap-2 font-bold text-white"><Database size={17} className="text-[#55e814]" /> {configured ? "Banco conectado" : "Modo demonstração"}</p><p className="mt-2 text-xs text-[#a8b2aa]">{configured ? admin?.email : "Dados de exemplo"}</p></div>
           </div>
-
-          <div className="mt-6 grid gap-3 md:grid-cols-3">
-            {[
-              ["Sorteio oficial", DRAW_DATE_LABEL],
-              ["Jantar dos vencedores", PRIZE_DINNER_DATE_LABEL],
-              ["Quantidade de prêmios", `${WINNING_COUPLES_COUNT} casais`],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                className="campaign-frame-soft bg-[#fffaf8]/78 p-4"
-              >
-                <p className="text-xs font-semibold text-[#a4213d]">
-                  {label}
-                </p>
-                <p className="mt-1 text-lg font-semibold text-[#3b111c]">
-                  {value}
-                </p>
-              </div>
-            ))}
-          </div>
+          <div className="mt-7 grid gap-3 sm:grid-cols-2"><div className="campaign-frame-soft p-4"><p className="text-xs font-bold uppercase tracking-[0.12em] text-[#55e814]">Sorteio</p><p className="mt-2 font-bold text-white">{DRAW_DATE_LABEL}</p></div><div className="campaign-frame-soft p-4"><p className="text-xs font-bold uppercase tracking-[0.12em] text-[#55e814]">Premiação</p><p className="mt-2 font-bold text-white">1 combo · 1 vencedor</p></div></div>
         </section>
-
-        <AdminCampaignPanel
-          initialEntries={initialEntries}
-          persistChanges={configured && !databaseErrorMessage}
-        />
+        <AdminCampaignPanel initialEntries={initialEntries} persistChanges={configured && !databaseError} />
       </div>
     </main>
   );
