@@ -1,10 +1,21 @@
 import { CampaignFlow } from "@/components/campaign/CampaignFlow";
-import { getPublicCampaignEntries } from "@/lib/campaign-db";
+import {
+  getPublicCampaignEntries,
+  getPublicRaffleWinners,
+} from "@/lib/campaign-db";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const entries = await getPublicCampaignEntries();
+  const [entries, raffleWinners] = await Promise.all([
+    getPublicCampaignEntries(),
+    getPublicRaffleWinners(),
+  ]);
 
-  return <CampaignFlow initialEntries={entries} />;
+  return (
+    <CampaignFlow
+      initialEntries={entries}
+      initialRaffleWinners={raffleWinners}
+    />
+  );
 }

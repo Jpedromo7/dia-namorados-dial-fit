@@ -1,35 +1,9 @@
 "use client";
 
-import { Clipboard, Download, Shuffle, Sparkles, Trophy } from "lucide-react";
+import { Loader2, Shuffle, Trophy } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  DRAW_DATE,
-  DRAW_DATE_LABEL,
-  PRIZE_DINNER_DATE_LABEL,
-  WINNING_COUPLES_COUNT,
-} from "@/config/campaign";
+import { DRAW_DATE, DRAW_DATE_LABEL, WINNERS_COUNT } from "@/config/campaign";
 import type { CampaignEntry } from "@/types/campaign";
-
-function downloadTextFile(filename: string, content: string) {
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
-function drawDistinctWinners(entries: CampaignEntry[]) {
-  return [...entries]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, WINNING_COUPLES_COUNT);
-}
-
-function formatWinnerLine(entry: CampaignEntry, index: number) {
-  return `${index + 1}º casal: ${entry.studentName} + ${entry.companionName}`;
-}
 
 export function RaffleDraw({
   entries,
@@ -39,266 +13,51 @@ export function RaffleDraw({
   persistResult?: boolean;
 }) {
   const [winners, setWinners] = useState<CampaignEntry[]>([]);
-  const [copyStatus, setCopyStatus] = useState("");
-  const [drawIsOpen, setDrawIsOpen] = useState(false);
-  const [drawStatus, setDrawStatus] = useState("");
   const [drawing, setDrawing] = useState(false);
+  const [message, setMessage] = useState("");
+  const [drawReady, setDrawReady] = useState(false);
+  const validated = useMemo(() => entries.filter((entry) => entry.status === "Validado"), [entries]);
 
   useEffect(() => {
-    const drawTime = new Date(DRAW_DATE).getTime();
-    const updateDrawState = () => setDrawIsOpen(Date.now() >= drawTime);
-
-    updateDrawState();
-    const intervalId = window.setInterval(updateDrawState, 1000);
-
-    return () => window.clearInterval(intervalId);
+    const timer = window.setTimeout(
+      () => setDrawReady(Date.now() >= new Date(DRAW_DATE).getTime()),
+      0,
+    );
+    return () => window.clearTimeout(timer);
   }, []);
 
-  const validatedEntries = useMemo(
-    () => entries.filter((entry) => entry.status === "Validado"),
-    [entries],
-  );
-
-  const hasEnoughValidatedEntries =
-    validatedEntries.length >= WINNING_COUPLES_COUNT;
-  const canDraw = drawIsOpen && hasEnoughValidatedEntries && !drawing;
-
-  async function drawWinners() {
-    if (!canDraw) {
-      return;
-    }
-
+  async function draw() {
     setDrawing(true);
-    setDrawStatus("");
-    setCopyStatus("");
-
-    if (!persistResult) {
-      setWinners(drawDistinctWinners(validatedEntries));
-      setDrawing(false);
-      setDrawStatus("Sorteio realizado no modo demonstração.");
-      return;
-    }
-
-    const response = await fetch("/api/admin/raffle/draw", {
-      method: "POST",
-    });
-
-    if (!response.ok) {
-      const data = (await response.json().catch(() => null)) as {
-        message?: string;
-      } | null;
-
-      setDrawStatus(data?.message ?? "Não foi possível realizar o sorteio.");
-      setDrawing(false);
-      return;
-    }
-
-    const data = (await response.json()) as { winners: CampaignEntry[] };
-    setWinners(data.winners);
-    setDrawStatus("Resultado salvo no banco.");
-    setDrawing(false);
-  }
-
-  async function copyNames() {
-    if (winners.length === 0) {
-      return;
-    }
-
-    const text = winners
-      .map((winner, index) => formatWinnerLine(winner, index))
-      .join("\n");
-
+    setMessage("");
     try {
-      await navigator.clipboard.writeText(text);
-      setCopyStatus("Nomes copiados.");
-    } catch {
-      setCopyStatus("Nao foi possivel copiar automaticamente.");
+      if (persistResult) {
+        const response = await fetch("/api/admin/raffle/draw", { method: "POST" });
+        const data = (await response.json().catch(() => null)) as { winners?: CampaignEntry[]; message?: string } | null;
+        if (!response.ok || !data?.winners) throw new Error(data?.message ?? "Não foi possível realizar o sorteio.");
+        setWinners(data.winners);
+      } else {
+        const random = validated[Math.floor(Math.random() * validated.length)];
+        if (!random) throw new Error("Não há inscrições validadas suficientes.");
+        setWinners([random]);
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível sortear.");
+    } finally {
+      setDrawing(false);
     }
-  }
-
-  function downloadResult() {
-    if (winners.length === 0) {
-      return;
-    }
-
-    downloadTextFile(
-      "resultado-sorteio-dois-casais.txt",
-      [
-        "Casais sorteados",
-        ...winners.flatMap((winner, index) => [
-          "",
-          formatWinnerLine(winner, index),
-          `Inscrição: ${winner.raffleNumber}`,
-          `Unidade: ${winner.unit}`,
-        ]),
-      ].join("\n"),
-    );
   }
 
   return (
-    <section className="min-w-0 rounded-[1.6rem] border border-white/70 bg-white/82 p-5 shadow-xl shadow-[#5b1224]/8 backdrop-blur sm:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#fff0f3] px-4 py-2 text-sm font-semibold text-[#a4213d]">
-            <Trophy size={16} aria-hidden="true" />
-            Tela de sorteio
-          </div>
-          <h2 className="mt-4 text-2xl font-semibold text-[#3b111c]">
-            Sorteio da campanha
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-[#6f555d]">
-            O botão será liberado automaticamente em {DRAW_DATE_LABEL}.
-            Participam apenas inscrições com status Validado, e serão sorteados{" "}
-            {WINNING_COUPLES_COUNT} casais aleatórios.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={drawWinners}
-          disabled={!canDraw}
-          className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-full bg-[#0e8b4a] px-5 text-sm font-semibold text-white shadow-lg shadow-[#0e8b4a]/16 transition hover:-translate-y-0.5 hover:bg-[#0b723e] disabled:cursor-not-allowed disabled:bg-[#9db9a9] disabled:shadow-none disabled:hover:translate-y-0"
-        >
-          <Shuffle size={17} aria-hidden="true" />
-          {drawing
-            ? "Sorteando..."
-            : drawIsOpen
-              ? "Realizar sorteio"
-              : "Sorteio bloqueado"}
+    <section className="campaign-frame p-5 sm:p-7">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#55e814]">Apuração</p><h2 className="mt-2 text-3xl font-black text-white">Sorteio do pai vencedor</h2><p className="mt-2 text-sm text-[#a8b2aa]">{validated.length} inscrições validadas · {WINNERS_COUNT} vencedor · {DRAW_DATE_LABEL}</p></div>
+        <button onClick={() => void draw()} disabled={drawing || !drawReady || validated.length < WINNERS_COUNT || winners.length > 0} className="campaign-button inline-flex min-h-12 items-center justify-center gap-2 bg-[#55e814] px-6 text-sm font-extrabold text-[#071006] disabled:cursor-not-allowed disabled:opacity-45">
+          {drawing ? <Loader2 className="animate-spin" size={18} /> : <Shuffle size={18} />} {drawing ? "Sorteando" : "Realizar sorteio"}
         </button>
       </div>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div>
-          <h3 className="text-sm font-semibold text-[#3b111c]">
-            Participantes validados
-          </h3>
-          <div className="mt-3 max-h-72 overflow-auto rounded-[1.2rem] border border-[#ead0d6]">
-            {validatedEntries.length > 0 ? (
-              <ul className="divide-y divide-[#ead0d6] bg-white">
-                {validatedEntries.map((entry) => (
-                  <li
-                    key={entry.id}
-                    className="grid gap-1 px-4 py-3 text-sm sm:grid-cols-[70px_1fr]"
-                  >
-                    <span className="font-mono font-semibold text-[#0e8b4a]">
-                      {entry.raffleNumber}
-                    </span>
-                    <div>
-                      <p className="font-semibold text-[#3b111c]">
-                        {entry.studentName} + {entry.companionName}
-                      </p>
-                      <p className="mt-1 text-xs text-[#7a5f67]">
-                        {entry.studentDocument} · {entry.companionDocument}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="px-4 py-5 text-sm text-[#7a5f67]">
-                Nenhum participante validado ainda.
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="relative overflow-hidden rounded-[1.4rem] border border-[#f0d8a0] bg-[#fff8e8] p-5">
-          <Sparkles
-            className="absolute right-5 top-5 text-[#d8b55e]/46"
-            size={28}
-            aria-hidden="true"
-          />
-          {winners.length > 0 ? (
-            <>
-              <p className="text-sm font-semibold text-[#7a5b17]">
-                Casais sorteados
-              </p>
-              <div className="mt-3 grid gap-3">
-                {winners.map((winner, index) => (
-                  <article
-                    key={winner.id}
-                    className="rounded-[1.2rem] border border-[#f0d8a0] bg-white p-4 shadow-sm shadow-[#5b1224]/6"
-                  >
-                    <p className="text-xs font-semibold text-[#7a5b17]">
-                      {index + 1}º casal
-                    </p>
-                    <h3 className="mt-2 text-xl font-semibold leading-tight text-[#3b111c]">
-                      {winner.studentName} + {winner.companionName}
-                    </h3>
-                    <p className="mt-2 text-sm text-[#6f555d]">
-                      Inscrição {winner.raffleNumber} · {winner.unit}
-                    </p>
-                  </article>
-                ))}
-              </div>
-
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={copyNames}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#0e8b4a]/20 bg-white px-4 text-sm font-semibold text-[#0e8b4a] transition hover:-translate-y-0.5 hover:bg-[#f7fbf6]"
-                >
-                  <Clipboard size={17} aria-hidden="true" />
-                  Copiar nomes
-                </button>
-                <button
-                  type="button"
-                  onClick={downloadResult}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#0e8b4a]/20 bg-white px-4 text-sm font-semibold text-[#0e8b4a] transition hover:-translate-y-0.5 hover:bg-[#f7fbf6]"
-                >
-                  <Download size={17} aria-hidden="true" />
-                  Baixar resultado
-                </button>
-              </div>
-              {copyStatus ? (
-                <p className="mt-3 text-sm font-medium text-[#0e8b4a]">
-                  {copyStatus}
-                </p>
-              ) : null}
-              {drawStatus ? (
-                <p className="mt-3 text-sm font-medium text-[#0e8b4a]">
-                  {drawStatus}
-                </p>
-              ) : null}
-            </>
-          ) : (
-            <div className="flex min-h-52 items-center justify-center text-center">
-              <div>
-                <Trophy
-                  size={38}
-                  className="mx-auto text-[#d8b55e]"
-                  aria-hidden="true"
-                />
-                <h3 className="mt-4 text-xl font-semibold text-[#3b111c]">
-                  Área para mostrar os casais sorteados
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-[#7a5f67]">
-                  Clique em Realizar sorteio para selecionar aleatoriamente os{" "}
-                  {WINNING_COUPLES_COUNT} casais vencedores. O jantar será em{" "}
-                  {PRIZE_DINNER_DATE_LABEL}.
-                </p>
-                {!drawIsOpen ? (
-                  <p className="mt-3 text-sm font-medium text-[#a61f3d]">
-                    O sorteio só será liberado em {DRAW_DATE_LABEL}.
-                  </p>
-                ) : null}
-                {drawIsOpen && !hasEnoughValidatedEntries ? (
-                  <p className="mt-3 text-sm font-medium text-[#a61f3d]">
-                    É preciso ter pelo menos {WINNING_COUPLES_COUNT} inscrições
-                    validadas para realizar o sorteio.
-                  </p>
-                ) : null}
-                {drawStatus ? (
-                  <p className="mt-3 text-sm font-medium text-[#a61f3d]">
-                    {drawStatus}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {!drawReady ? <p className="mt-5 rounded-lg border border-[#f4c85d]/30 bg-[#f4c85d]/8 p-4 text-sm font-semibold text-[#f4d780]">O botão será liberado automaticamente no horário oficial.</p> : null}
+      {message ? <p className="mt-5 rounded-lg border border-[#ff7d7d]/30 bg-[#ff7d7d]/8 p-4 text-sm font-semibold text-[#ff9c9c]">{message}</p> : null}
+      {winners[0] ? <div className="mt-6 flex items-center gap-4 rounded-xl bg-[#55e814] p-5 text-[#071006]"><Trophy size={32} /><div><p className="text-xs font-black uppercase tracking-[0.14em]">Vencedor</p><p className="mt-1 text-2xl font-black">{winners[0].studentName}</p><p className="font-semibold">Inscrição {winners[0].raffleNumber}</p></div></div> : null}
     </section>
   );
 }

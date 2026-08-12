@@ -1,188 +1,144 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7fbf6;
-  --foreground: #101712;
-  --font-display: "Cormorant Garamond", "Playfair Display", Georgia,
-    "Times New Roman", serif;
-  --font-editorial: "Baskerville", "Libre Baskerville", Georgia, serif;
+  --background: #070b08;
+  --foreground: #f5f7f5;
+  --dial-black: #070b08;
+  --dial-graphite: #111813;
+  --dial-panel: #172019;
+  --dial-green: #55e814;
+  --dial-green-dark: #20a320;
+  --dial-muted: #a8b2aa;
+  --dial-line: #2b382d;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
+  margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-.font-display {
-  font-family: var(--font-display);
+::selection { background: rgba(85, 232, 20, 0.32); }
+
+.campaign-bg {
+  background:
+    radial-gradient(circle at 88% 18%, rgba(66, 203, 24, 0.2), transparent 30rem),
+    radial-gradient(circle at 8% 78%, rgba(35, 119, 38, 0.12), transparent 28rem),
+    linear-gradient(135deg, #070b08 0%, #0f1711 52%, #070b08 100%);
 }
 
-.font-editorial {
-  font-family: var(--font-editorial);
+.campaign-grid {
+  background-image:
+    linear-gradient(rgba(85, 232, 20, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(85, 232, 20, 0.055) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+
+.campaign-frame {
+  border: 1px solid rgba(85, 232, 20, 0.25);
+  border-radius: 18px;
+  background: rgba(17, 24, 19, 0.88);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+}
+
+.campaign-frame-soft {
+  border: 1px solid var(--dial-line);
+  border-radius: 14px;
+  background: rgba(23, 32, 25, 0.88);
+}
+
+.campaign-button {
+  border: 1px solid rgba(85, 232, 20, 0.55);
+  border-radius: 10px;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+.campaign-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(85, 232, 20, 0.16);
+}
+
+.campaign-field {
+  border: 1px solid #344137;
+  border-radius: 10px;
+  background: #0d130f;
+  color: #f5f7f5;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.campaign-field::placeholder { color: #6e7b71; }
+.campaign-field:hover { border-color: #506054; }
+.campaign-field:focus {
+  border-color: var(--dial-green);
+  box-shadow: 0 0 0 3px rgba(85, 232, 20, 0.12);
 }
 
 .dialfit-logo-clean {
-  filter: drop-shadow(0 1px 0 rgba(58, 16, 27, 0.58))
-    drop-shadow(1px 0 0 rgba(58, 16, 27, 0.36))
-    drop-shadow(-1px 0 0 rgba(58, 16, 27, 0.28))
-    drop-shadow(0 4px 8px rgba(58, 16, 27, 0.36))
-    drop-shadow(0 12px 24px rgba(255, 255, 255, 0.34));
+  filter: drop-shadow(0 5px 18px rgba(85, 232, 20, 0.16));
 }
 
-.lombardia-logo-clean {
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.78))
-    drop-shadow(1px 0 0 rgba(0, 0, 0, 0.58))
-    drop-shadow(-1px 0 0 rgba(0, 0, 0, 0.48))
-    drop-shadow(0 5px 10px rgba(0, 0, 0, 0.55))
-    drop-shadow(0 0 18px rgba(244, 209, 144, 0.24));
+.display-condensed {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
 }
 
-::selection {
-  background: rgba(14, 139, 74, 0.18);
+.hero-slash {
+  position: absolute;
+  width: 18rem;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--dial-green), transparent);
+  transform: rotate(-42deg);
+  opacity: 0.34;
+}
+
+.hero-symbol-rain {
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, transparent, black 10%, black 88%, transparent);
+}
+
+.hero-rain-item {
+  position: absolute;
+  top: -18%;
+  display: grid;
+  place-items: center;
+  color: rgba(85, 232, 20, 0.34);
+  filter: drop-shadow(0 0 12px rgba(85, 232, 20, 0.2));
+  animation: hero-symbol-fall 14s linear infinite;
+  will-change: transform;
+}
+
+.hero-rain-item-1 { opacity: 0.42; }
+.hero-rain-item-2 { opacity: 0.5; }
+
+@keyframes hero-symbol-fall {
+  0% { transform: translate3d(-18px, -12vh, 0) rotate(-18deg); }
+  50% { transform: translate3d(22px, 58vh, 0) rotate(150deg); }
+  100% { transform: translate3d(-8px, 124vh, 0) rotate(330deg); }
 }
 
 @keyframes campaign-layer-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.992);
-    filter: blur(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
 }
+.animate-campaign-layer { animation: campaign-layer-in 420ms ease both; }
 
-@keyframes floating-heart {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) rotate(-4deg);
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; }
+  .hero-rain-item {
+    animation-name: hero-symbol-fall !important;
+    animation-duration: 14s !important;
+    animation-timing-function: linear !important;
+    animation-iteration-count: infinite !important;
   }
-  50% {
-    transform: translate3d(0, -12px, 0) rotate(5deg);
-  }
-}
-
-@keyframes floating-romance {
-  0%,
-  100% {
-    opacity: 0.72;
-    transform: translate3d(0, 0, 0) rotate(-6deg) scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: translate3d(0, -18px, 0) rotate(7deg) scale(1.04);
-  }
-}
-
-@keyframes floating-heart-rise {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 24px, 0) rotate(-10deg) scale(0.72);
-  }
-  12% {
-    opacity: 0.78;
-  }
-  50% {
-    opacity: 0.52;
-    transform: translate3d(var(--drift), -48vh, 0) rotate(7deg) scale(1);
-  }
-  88% {
-    opacity: 0.26;
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(calc(var(--drift) * -0.4), -104vh, 0)
-      rotate(18deg) scale(1.12);
-  }
-}
-
-@keyframes cta-heart-burst {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 0, 0) scale(0.65) rotate(-10deg);
-  }
-  14% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(var(--x), var(--y), 0) scale(1.16) rotate(12deg);
-  }
-}
-
-@keyframes soft-glow-pulse {
-  0%,
-  100% {
-    box-shadow: 0 20px 60px rgba(91, 18, 36, 0.12);
-  }
-  50% {
-    box-shadow: 0 26px 80px rgba(166, 31, 61, 0.2);
-  }
-}
-
-@keyframes terms-heart-rise {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 8px, 0) scale(0.7);
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(var(--x), -36px, 0) scale(1.05);
-  }
-}
-
-.animate-campaign-layer {
-  animation: campaign-layer-in 520ms ease both;
-}
-
-.floating-heart {
-  position: absolute;
-  pointer-events: none;
-  animation: floating-heart 6s ease-in-out infinite;
-}
-
-.floating-romance {
-  position: absolute;
-  pointer-events: none;
-  animation: floating-romance 7s ease-in-out infinite;
-}
-
-.floating-heart-rise {
-  pointer-events: none;
-  animation: floating-heart-rise 16s linear infinite;
-  will-change: transform, opacity;
-}
-
-.cta-heart-burst {
-  animation: cta-heart-burst 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.terms-heart-rise {
-  animation: terms-heart-rise 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.organic-hero-mask {
-  border-radius: 2.6rem 1.2rem 3.2rem 1.4rem;
-  clip-path: polygon(0 4%, 100% 0, 100% 90%, 86% 100%, 0 96%);
-}
-
-.romantic-surface {
-  animation: soft-glow-pulse 8s ease-in-out infinite;
 }

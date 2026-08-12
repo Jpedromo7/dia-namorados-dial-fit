@@ -37,6 +37,9 @@ export function CampaignHero() {
             <Sparkles size={16} aria-hidden="true" />
             Campanha oficial Dial Fit
           </div>
+          <div className="mt-3 inline-flex items-center gap-2 rounded-md border border-[#0e8b4a]/24 bg-[#f7fbf6] px-3 py-2 text-sm font-semibold text-[#0b723e] shadow-sm shadow-emerald-950/5">
+            Planos anuais ativos
+          </div>
 
           <h1 className="mt-6 max-w-3xl text-5xl font-semibold leading-[1.03] text-[#101712] sm:text-6xl">
             {CAMPAIGN_NAME}
@@ -48,6 +51,9 @@ export function CampaignHero() {
 
           <p className="mt-4 max-w-xl text-base leading-7 text-[#536158]">
             {CAMPAIGN_COMPLEMENT}
+          </p>
+          <p className="mt-3 max-w-xl rounded-md border border-[#bc2a40]/18 bg-white/78 px-4 py-3 text-sm font-semibold leading-6 text-[#7a1027]">
+            Alunos de plano mensal não entram no sorteio.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">

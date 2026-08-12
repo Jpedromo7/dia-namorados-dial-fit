@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { ArrowLeft, LockKeyhole } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { AdminLogin } from "@/components/campaign/AdminLogin";
-import { DIALFIT_LOGO } from "@/config/campaign";
+import { CAMPAIGN_KICKER, DIALFIT_LOGO } from "@/config/campaign";
 import {
   hasSupabasePublicConfig,
   createSupabaseServerClient,
@@ -13,10 +14,27 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Login Admin | Dia dos Namorados Dial Fit",
+  title: "Login Admin | Dia dos Pais Dial Fit",
 };
 
-export default async function AdminLoginPage() {
+function getLoginErrorMessage(errorCode: unknown) {
+  if (errorCode === "not-authorized") {
+    return "Conta Google conectada, mas esse e-mail não está autorizado para o painel administrativo.";
+  }
+
+  if (errorCode === "session") {
+    return "Não foi possível concluir o login com Google. Tente novamente.";
+  }
+
+  return "";
+}
+
+export default async function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string | string[] }>;
+}) {
+  const loginErrorMessage = getLoginErrorMessage((await searchParams).error);
   const supabase = await createSupabaseServerClient();
   const adminEmails = getAdminEmails();
 
@@ -33,34 +51,43 @@ export default async function AdminLoginPage() {
   const configured = hasSupabasePublicConfig() && adminEmails.length > 0;
 
   return (
-    <main className="min-h-screen bg-[#fff6f1] px-5 py-8 text-[#1f1719]">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(244,209,144,0.32),transparent_28%),radial-gradient(circle_at_84%_12%,rgba(164,33,61,0.18),transparent_30%),linear-gradient(145deg,#fff8f2_0%,#f7dce2_52%,#fff6f1_100%)]" />
+    <main className="campaign-bg min-h-screen px-5 py-8 text-white">
+      <div className="campaign-grid pointer-events-none fixed inset-0" />
       <section className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-xl place-items-center">
-        <div className="w-full rounded-[2rem] border border-white/70 bg-white/78 p-7 text-center shadow-2xl shadow-[#5b1224]/12 backdrop-blur-xl">
+        <div className="campaign-frame w-full p-7 text-center backdrop-blur-xl">
           <Image
             src={DIALFIT_LOGO}
             alt="Dial Fit Academia"
-            width={178}
-            height={74}
+            width={2048}
+            height={696}
             priority
-            className="dialfit-logo-clean mx-auto h-auto w-[160px]"
+            style={{ height: "auto" }}
+            className="dialfit-logo-clean mx-auto w-[160px]"
           />
-          <p className="mt-8 text-sm font-semibold text-[#0e8b4a]">
+          <p className="mx-auto mt-8 inline-flex items-center gap-2 rounded-full border border-[#55e814]/30 bg-[#55e814]/8 px-4 py-2 text-sm font-semibold text-[#74f23d]">
+            <LockKeyhole size={16} aria-hidden="true" />
             Painel administrativo
           </p>
-          <h1 className="font-display mt-3 text-4xl font-semibold leading-tight text-[#3b111c]">
+          <p className="mt-5 text-xs font-black uppercase tracking-[0.18em] text-[#55e814]">{CAMPAIGN_KICKER}</p>
+          <h1 className="mt-3 text-4xl font-black leading-tight text-white">
             Acesso restrito
           </h1>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#6f555d]">
+          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#a8b2aa]">
             Entre com o e-mail autorizado para validar inscrições e realizar o
             sorteio.
           </p>
 
           <div className="mt-7">
+            {loginErrorMessage ? (
+              <div className="campaign-frame-soft mb-4 border-[#ff7d7d]/30 bg-[#ff7d7d]/8 p-4 text-sm font-semibold leading-6 text-[#ff9c9c]">
+                {loginErrorMessage}
+              </div>
+            ) : null}
+
             {configured ? (
               <AdminLogin />
             ) : (
-              <div className="rounded-[1.2rem] border border-[#f1c0cc] bg-[#fff0f3] p-4 text-sm font-semibold leading-6 text-[#a4213d]">
+              <div className="campaign-frame-soft border-[#ff7d7d]/30 bg-[#ff7d7d]/8 p-4 text-sm font-semibold leading-6 text-[#ff9c9c]">
                 Configure as variáveis do Supabase e ADMIN_EMAILS para liberar o
                 login.
               </div>
@@ -69,8 +96,9 @@ export default async function AdminLoginPage() {
 
           <Link
             href="/"
-            className="mt-6 inline-flex text-sm font-semibold text-[#0e8b4a] underline-offset-4 hover:underline"
+            className="campaign-button mt-6 inline-flex h-11 items-center justify-center gap-2 bg-[#111813] px-5 text-sm font-semibold text-[#74f23d]"
           >
+            <ArrowLeft size={16} aria-hidden="true" />
             Voltar para a campanha
           </Link>
         </div>

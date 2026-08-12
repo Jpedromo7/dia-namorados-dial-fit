@@ -1,8 +1,5 @@
 import { ExternalLink, MapPin, Star } from "lucide-react";
-import {
-  DIAL_BEACH_GOOGLE_REVIEW_URL,
-  DIAL_FIT_GOOGLE_REVIEW_URL,
-} from "@/config/campaign";
+import { DIAL_FIT_GOOGLE_REVIEW_URL } from "@/config/campaign";
 
 export function ReviewCTA() {
   return (
@@ -23,7 +20,7 @@ export function ReviewCTA() {
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div className="mt-5">
         <a
           href={DIAL_FIT_GOOGLE_REVIEW_URL}
           target="_blank"
@@ -32,16 +29,6 @@ export function ReviewCTA() {
         >
           <MapPin size={17} aria-hidden="true" />
           Avaliar Dial Fit no Google Maps
-          <ExternalLink size={15} aria-hidden="true" />
-        </a>
-        <a
-          href={DIAL_BEACH_GOOGLE_REVIEW_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#0e8b4a]/20 bg-white px-4 py-3 text-center text-sm font-semibold text-[#0e8b4a] transition hover:border-[#0e8b4a]/45 hover:bg-[#f7fbf6]"
-        >
-          <MapPin size={17} aria-hidden="true" />
-          Avaliar Dial Beach no Google Maps
           <ExternalLink size={15} aria-hidden="true" />
         </a>
       </div>

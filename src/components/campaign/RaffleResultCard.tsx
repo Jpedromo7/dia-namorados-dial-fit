@@ -28,7 +28,7 @@ export function RaffleResultCard({
   );
 
   return (
-    <section className="relative isolate overflow-hidden rounded-[2rem] border border-[#f4d190]/36 bg-[#3b111c] p-5 text-white shadow-2xl shadow-[#5b1224]/22 sm:p-6">
+    <section className="campaign-frame-gold relative isolate overflow-hidden bg-[#3b111c] p-5 text-white sm:p-6">
       <Image
         src={LOMBARDIA_FACADE_IMAGE}
         alt="Fachada do Restaurante Lombardia à noite"
@@ -51,7 +51,7 @@ export function RaffleResultCard({
 
       <div className="relative flex min-h-[470px] flex-col justify-between">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/14 px-4 py-2 text-sm font-semibold text-[#ffe7ad] backdrop-blur">
+          <div className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/14 px-4 py-2 text-sm font-semibold text-[#ffe7ad] backdrop-blur">
             <Trophy size={16} aria-hidden="true" />
             Casais sorteados
           </div>
@@ -85,7 +85,7 @@ export function RaffleResultCard({
             {winnerSlots.map((winner, index) => (
               <div
                 key={winner?.id ?? `winner-placeholder-${index}`}
-                className="rounded-[1.2rem] border border-white/14 bg-white/12 px-4 py-3 text-left backdrop-blur"
+                className="rounded-lg border border-white/18 bg-white/12 px-4 py-3 text-left backdrop-blur"
               >
                 <p className="text-xs font-semibold uppercase text-[#ffe7ad]/86">
                   {index + 1}º casal
@@ -104,7 +104,7 @@ export function RaffleResultCard({
           </p>
         </div>
 
-        <div className="rounded-[1.4rem] border border-white/14 bg-white/12 p-4 text-center text-sm text-white/76 backdrop-blur">
+        <div className="rounded-lg border border-white/18 bg-white/12 p-4 text-center text-sm text-white/76 backdrop-blur">
           Dia dos Namorados Dial Fit em parceria com o Restaurante Lombardia.
           Jantar dos vencedores em {PRIZE_DINNER_DATE_LABEL}.
         </div>
