@@ -21,7 +21,7 @@ export function ConfirmationLayer({
   const winner = raffleWinners[0];
 
   async function share() {
-    const text = `${CAMPAIGN_KICKER} Estou participando do sorteio de Dia dos Pais da Dial Fit. Meu número é ${latestEntry?.raffleNumber ?? "---"}.`;
+    const text = `${CAMPAIGN_KICKER} Estou participando do sorteio Agosto dos Pais da Dial Fit. Meu número é ${latestEntry?.raffleNumber ?? "---"}.`;
     if (navigator.share) {
       await navigator.share({ title: CAMPAIGN_NAME, text, url: window.location.origin });
       return;

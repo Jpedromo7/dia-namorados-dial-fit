@@ -121,7 +121,7 @@ export function PresentationLayer({
           </div>
           <p className="mt-7 text-sm font-bold uppercase tracking-[0.22em] text-white/58">{CAMPAIGN_KICKER}</p>
           <h1 className="display-condensed mt-4 max-w-3xl leading-[0.78] text-white">
-            <span className="block text-[clamp(4.6rem,14vw,10.8rem)]">Dia dos</span>
+            <span className="block text-[clamp(3.25rem,9.5vw,7.6rem)]">Agosto dos</span>
             <span className="mt-3 block text-[clamp(6.3rem,19vw,14.2rem)] text-[#55e814]">Pais</span>
           </h1>
           <p className="mt-8 max-w-xl text-xl font-semibold leading-8 text-white sm:text-2xl">{CAMPAIGN_SUBTITLE}</p>

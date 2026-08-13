@@ -13,13 +13,13 @@ import {
 
 export const metadata: Metadata = {
   title: `Regulamento | ${CAMPAIGN_NAME}`,
-  description: "Regulamento da campanha Dia dos Pais Dial Fit.",
+  description: "Regulamento da campanha Agosto dos Pais Dial Fit.",
 };
 
 const sections = [
   {
     title: "1. Campanha e promotora",
-    body: "A campanha Dia dos Pais Dial Fit é promovida pela Dial Fit Academia e tem como finalidade celebrar o Dia dos Pais entre seus alunos, conforme as condições deste regulamento.",
+    body: "A campanha Agosto dos Pais Dial Fit é promovida pela Dial Fit Academia e tem como finalidade celebrar o Agosto dos Pais entre seus alunos, conforme as condições deste regulamento.",
   },
   {
     title: "2. Quem pode participar",
