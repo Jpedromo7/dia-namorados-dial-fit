@@ -1,4 +1,4 @@
-# Dia dos Pais Dial Fit
+# Agosto dos Pais Dial Fit
 
 **Pai forte. Família forte.**
 

@@ -12,7 +12,7 @@ import { hasSupabaseAdminConfig } from "@/lib/supabase/admin";
 import { hasSupabasePublicConfig } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: `Admin | ${CAMPAIGN_NAME}`, description: "Painel administrativo da campanha de Dia dos Pais." };
+export const metadata: Metadata = { title: `Admin | ${CAMPAIGN_NAME}`, description: "Painel administrativo da campanha Agosto dos Pais." };
 
 export default async function AdminPage() {
   const configured = hasSupabasePublicConfig() && hasSupabaseAdminConfig() && getAdminEmails().length > 0;
@@ -23,7 +23,7 @@ export default async function AdminPage() {
   let databaseError = "";
   if (configured) {
     try { initialEntries = await getAdminCampaignEntries(); }
-    catch { databaseError = "O banco não respondeu. Confira a conexão e aplique a nova migração da campanha de Dia dos Pais."; }
+    catch { databaseError = "O banco não respondeu. Confira a conexão e aplique a nova migração da campanha Agosto dos Pais."; }
   }
 
   return (

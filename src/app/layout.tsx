@@ -9,7 +9,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const metadata: Metadata = {
   metadataBase: new URL("https://dia-dos-pais-dial-fit.vercel.app"),
   title: CAMPAIGN_NAME,
-  description: `${CAMPAIGN_KICKER} Campanha especial de Dia dos Pais para pais alunos da Dial Fit.`,
+  description: `${CAMPAIGN_KICKER} Campanha especial Agosto dos Pais para pais alunos da Dial Fit.`,
   openGraph: {
     title: CAMPAIGN_NAME,
     description: `${CAMPAIGN_KICKER} Participe do sorteio especial da Dial Fit.`,

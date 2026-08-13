@@ -57,7 +57,7 @@ export default function OpenGraphImage() {
 
           <div style={{ display: "flex", flexDirection: "column", marginTop: 58 }}>
             <div style={{ display: "flex", fontSize: 108, lineHeight: 0.88, fontWeight: 900, letterSpacing: -5 }}>
-              DIA DOS
+              AGOSTO DOS
             </div>
             <div style={{ display: "flex", marginTop: 18, color: "#55e814", fontSize: 142, lineHeight: 0.78, fontWeight: 900, letterSpacing: -7 }}>
               PAIS

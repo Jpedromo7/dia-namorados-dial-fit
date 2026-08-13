@@ -14,7 +14,7 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Login Admin | Dia dos Pais Dial Fit",
+  title: "Login Admin | Agosto dos Pais Dial Fit",
 };
 
 function getLoginErrorMessage(errorCode: unknown) {
