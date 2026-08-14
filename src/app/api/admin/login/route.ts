@@ -57,6 +57,16 @@ export async function POST(request: Request) {
     });
 
     if (error) {
+      if (error.status === 429 || error.code === "over_email_send_rate_limit") {
+        return NextResponse.json(
+          {
+            message:
+              "O limite de e-mails foi atingido. Use o link mais recente da sua caixa de entrada ou tente novamente em 1 hora.",
+          },
+          { status: 429 },
+        );
+      }
+
       return NextResponse.json(
         { message: "Não foi possível enviar o acesso agora." },
         { status: 502 },
