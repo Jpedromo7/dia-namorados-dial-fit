@@ -5,6 +5,7 @@ import {
   CAMPAIGN_SLUG,
   CAMPAIGN_UNITS,
   DRAW_DATE,
+  REGISTRATION_END_DATE,
   WINNERS_COUNT,
 } from "@/config/campaign";
 import { MOCK_CAMPAIGN_ENTRIES } from "@/data/mockEntries";
@@ -277,6 +278,14 @@ export async function findCampaignEntryByDocument(document: string): Promise<Loo
 }
 
 export async function createCampaignEntry(rawPayload: unknown): Promise<CreateEntryResult> {
+  if (Date.now() > new Date(REGISTRATION_END_DATE).getTime()) {
+    return {
+      ok: false,
+      status: 403,
+      message: "As inscrições para esta campanha foram encerradas.",
+    };
+  }
+
   const normalized = normalizeRegistrationPayload(rawPayload);
   if (!normalized.ok) return normalized;
   const payload = normalized.payload;

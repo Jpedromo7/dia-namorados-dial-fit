@@ -19,10 +19,12 @@ export function RaffleDraw({
   const validated = useMemo(() => entries.filter((entry) => entry.status === "Validado"), [entries]);
 
   useEffect(() => {
-    const timer = window.setTimeout(
-      () => setDrawReady(Date.now() >= new Date(DRAW_DATE).getTime()),
-      0,
-    );
+    const drawTime = new Date(DRAW_DATE).getTime();
+    const updateDrawReady = () => setDrawReady(Date.now() >= drawTime);
+
+    updateDrawReady();
+    const timer = window.setTimeout(updateDrawReady, Math.max(drawTime - Date.now(), 0));
+
     return () => window.clearTimeout(timer);
   }, []);
 
