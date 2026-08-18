@@ -162,7 +162,7 @@ export function PresentationLayer({
             <div className="relative flex items-center justify-between border-b border-white/10 pb-5">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#55e814]">Sorteio especial</p>
-                <p className="mt-2 text-lg font-bold text-white">Um combo. Um pai vencedor.</p>
+                <p className="mt-2 text-lg font-bold text-white">Três prêmios. Três pais vencedores.</p>
               </div>
               <Gift size={34} className="text-[#55e814]" />
             </div>
@@ -189,7 +189,7 @@ export function PresentationLayer({
         {[
           [ShieldCheck, "Exclusivo para pais", "O participante precisa ser pai e aluno ativo da Dial Fit."],
           [Search, "Uma inscrição por CPF", "O cadastro é individual e será conferido pela equipe."],
-          [Gift, "Combo completo", "O vencedor recebe os três itens apresentados na campanha."],
+          [Gift, "Três vencedores", "Cada pai sorteado recebe um dos três prêmios da campanha."],
         ].map(([Icon, title, copy]) => (
           <article key={String(title)} className="campaign-frame-soft p-5">
             <Icon size={22} className="text-[#55e814]" />
