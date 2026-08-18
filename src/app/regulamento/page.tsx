@@ -39,15 +39,15 @@ const sections = [
   },
   {
     title: "6. Prêmio",
-    body: `Um único vencedor receberá um combo composto por: ${PRIZES.map((prize) => `1 ${prize.title} — ${prize.partner}`).join("; ")}. Os itens são pessoais, não convertíveis em dinheiro e serão entregues conforme orientação da Dial Fit e dos parceiros.` ,
+    body: `Serão três vencedores distintos, e cada um receberá um prêmio conforme a ordem da apuração: ${PRIZES.map((prize, index) => `${index + 1}º sorteado — 1 ${prize.title}, oferecido por ${prize.partner}`).join("; ")}. Os itens são pessoais, não convertíveis em dinheiro e serão entregues conforme orientação da Dial Fit e dos parceiros.` ,
   },
   {
     title: "7. Sorteio e resultado",
-    body: "A apuração eletrônica escolherá aleatoriamente uma inscrição entre os participantes validados. O resultado será registrado no painel da campanha e poderá ser divulgado nos canais oficiais da Dial Fit.",
+    body: "A apuração eletrônica escolherá aleatoriamente três inscrições distintas entre os participantes validados. A posição de cada sorteado definirá o prêmio recebido. O resultado será registrado no painel da campanha e poderá ser divulgado nos canais oficiais da Dial Fit.",
   },
   {
     title: "8. Contato e entrega",
-    body: "O vencedor será contatado pelos dados informados. Caso os dados estejam incorretos, o vínculo não seja confirmado ou não haja resposta dentro do prazo informado pela Dial Fit, poderá ser realizada nova apuração entre os demais participantes validados.",
+    body: "Os vencedores serão contatados pelos dados informados. Caso os dados estejam incorretos, o vínculo não seja confirmado ou não haja resposta dentro do prazo informado pela Dial Fit, poderá ser realizada nova apuração entre os demais participantes validados para o prêmio correspondente.",
   },
   {
     title: "9. Desclassificação",
@@ -55,7 +55,7 @@ const sections = [
   },
   {
     title: "10. Dados pessoais",
-    body: "Nome, CPF, telefone e e-mail serão utilizados para controlar a inscrição, validar a condição de aluno, realizar o sorteio e contatar o vencedor. O acesso aos dados completos será restrito à administração da campanha, observadas as regras aplicáveis de proteção de dados.",
+    body: "Nome, CPF, telefone e e-mail serão utilizados para controlar a inscrição, validar a condição de aluno, realizar o sorteio e contatar os vencedores. O acesso aos dados completos será restrito à administração da campanha, observadas as regras aplicáveis de proteção de dados.",
   },
   {
     title: "11. Disposições finais",
