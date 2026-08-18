@@ -18,7 +18,6 @@ export function ConfirmationLayer({
   onRestart: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const winner = raffleWinners[0];
 
   async function share() {
     const text = `${CAMPAIGN_KICKER} Estou participando do sorteio Agosto dos Pais da Dial Fit. Meu número é ${latestEntry?.raffleNumber ?? "---"}.`;
@@ -60,7 +59,7 @@ export function ConfirmationLayer({
         </div>
 
         <aside className="campaign-frame p-6 sm:p-7">
-          <div className="flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#55e814]">O combo sorteado</p><h2 className="mt-2 text-2xl font-black text-white">Três presentes</h2></div><Gift className="text-[#55e814]" size={30} /></div>
+          <div className="flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#55e814]">Premiação</p><h2 className="mt-2 text-2xl font-black text-white">Três prêmios · três vencedores</h2></div><Gift className="text-[#55e814]" size={30} /></div>
           <div className="mt-6 grid gap-3">
             {PRIZES.map((prize, index) => {
               const Icon = prizeIcons[index];
@@ -72,8 +71,8 @@ export function ConfirmationLayer({
       </section>
 
       <section className="campaign-frame mt-7 p-6 sm:p-8">
-        <div className="flex items-center gap-3"><Trophy className="text-[#55e814]" size={27} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#55e814]">Resultado oficial</p><h2 className="mt-1 text-2xl font-black text-white">{winner ? "Pai vencedor" : "Aguardando o sorteio"}</h2></div></div>
-        {winner ? <div className="mt-6 rounded-xl bg-[#55e814] p-5 text-[#071006]"><p className="text-2xl font-black">{winner.studentName}</p><p className="mt-1 font-semibold">Inscrição {winner.raffleNumber}</p></div> : <p className="mt-5 text-sm leading-6 text-[#a8b2aa]">O nome do vencedor aparecerá aqui depois da apuração no painel administrativo.</p>}
+        <div className="flex items-center gap-3"><Trophy className="text-[#55e814]" size={27} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#55e814]">Resultado oficial</p><h2 className="mt-1 text-2xl font-black text-white">{raffleWinners.length ? "Pais vencedores" : "Aguardando o sorteio"}</h2></div></div>
+        {raffleWinners.length ? <div className="mt-6 grid gap-3 md:grid-cols-3">{raffleWinners.map((winner, index) => <div key={winner.id} className="rounded-xl bg-[#55e814] p-5 text-[#071006]"><p className="text-xs font-black uppercase tracking-[0.14em]">{index + 1}º vencedor</p><p className="mt-2 text-xl font-black">{winner.studentName}</p><p className="mt-1 font-semibold">Inscrição {winner.raffleNumber}</p><p className="mt-4 border-t border-[#071006]/20 pt-3 text-sm font-extrabold">{PRIZES[index]?.title} · {PRIZES[index]?.partner}</p></div>)}</div> : <p className="mt-5 text-sm leading-6 text-[#a8b2aa]">Os três vencedores e seus respectivos prêmios aparecerão aqui depois da apuração no painel administrativo.</p>}
       </section>
     </div>
   );

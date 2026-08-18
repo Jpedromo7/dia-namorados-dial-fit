@@ -6,7 +6,7 @@ export const CAMPAIGN_SUBTITLE =
 export const CAMPAIGN_COMPLEMENT =
   "Participação exclusiva para pais que sejam alunos ativos da Dial Fit. Uma inscrição por CPF.";
 
-export const WINNERS_COUNT = 1;
+export const WINNERS_COUNT = 3;
 export const DRAW_DATE = "2026-08-21T18:00:00-03:00";
 export const DRAW_DATE_LABEL = "21 de agosto de 2026, às 18h";
 export const REGISTRATION_END_DATE = "2026-08-21T17:59:59-03:00";
