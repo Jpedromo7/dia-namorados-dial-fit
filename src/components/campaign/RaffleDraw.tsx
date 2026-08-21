@@ -62,7 +62,7 @@ export function RaffleDraw({
   return (
     <section className="campaign-frame p-5 sm:p-7">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#55e814]">Apuração</p><h2 className="mt-2 text-3xl font-black text-white">Sorteio dos três vencedores</h2><p className="mt-2 text-sm text-[#a8b2aa]">{validated.length} inscrições validadas · {WINNERS_COUNT} vencedores · {DRAW_DATE_LABEL}</p></div>
+        <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#55e814]">Apuração</p><h2 className="mt-2 text-3xl font-black text-white">Sorteio dos sete vencedores</h2><p className="mt-2 text-sm text-[#a8b2aa]">{validated.length} inscrições validadas · {WINNERS_COUNT} vencedores · {DRAW_DATE_LABEL}</p></div>
         <button onClick={() => void draw()} disabled={drawing || !drawReady || validated.length < WINNERS_COUNT || winners.length > 0} className="campaign-button inline-flex min-h-12 items-center justify-center gap-2 bg-[#55e814] px-6 text-sm font-extrabold text-[#071006] disabled:cursor-not-allowed disabled:opacity-45">
           {drawing ? <Loader2 className="animate-spin" size={18} /> : <Shuffle size={18} />} {drawing ? "Sorteando" : "Realizar sorteio"}
         </button>

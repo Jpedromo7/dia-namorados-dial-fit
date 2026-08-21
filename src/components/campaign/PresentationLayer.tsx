@@ -4,8 +4,10 @@ import {
   CalendarDays,
   Check,
   ChevronRight,
+  CupSoda,
   Dumbbell,
   Gift,
+  HandHeart,
   Loader2,
   Search,
   ShieldCheck,
@@ -26,7 +28,7 @@ import {
   PRIZES,
 } from "@/config/campaign";
 
-const prizeIcons = [Dumbbell, Stethoscope, SprayCan];
+const prizeIcons = [Dumbbell, Stethoscope, SprayCan, HandHeart, HandHeart, CupSoda, CupSoda];
 
 const heroRainItems = [
   { kind: "dumbbell", left: "3%", delay: "-2s", duration: "11s", size: 30 },
@@ -162,7 +164,7 @@ export function PresentationLayer({
             <div className="relative flex items-center justify-between border-b border-white/10 pb-5">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#55e814]">Sorteio especial</p>
-                <p className="mt-2 text-lg font-bold text-white">Três prêmios. Três pais vencedores.</p>
+                <p className="mt-2 text-lg font-bold text-white">Sete prêmios. Sete pais vencedores.</p>
               </div>
               <Gift size={34} className="text-[#55e814]" />
             </div>
@@ -170,7 +172,7 @@ export function PresentationLayer({
               {PRIZES.map((prize, index) => {
                 const Icon = prizeIcons[index];
                 return (
-                  <article key={prize.title} className="group flex items-center gap-4 rounded-xl border border-white/9 bg-white/[0.035] p-4 transition hover:border-[#55e814]/35 hover:bg-[#55e814]/[0.06]">
+                  <article key={prize.id} className="group flex items-center gap-4 rounded-xl border border-white/9 bg-white/[0.035] p-4 transition hover:border-[#55e814]/35 hover:bg-[#55e814]/[0.06]">
                     <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#55e814] text-[#071006]"><Icon size={23} /></span>
                     <div><p className="font-extrabold uppercase text-white">1 {prize.title}</p><p className="mt-1 text-sm text-[#a8b2aa]">{prize.partner}</p></div>
                   </article>
@@ -189,7 +191,7 @@ export function PresentationLayer({
         {[
           [ShieldCheck, "Exclusivo para pais", "O participante precisa ser pai e aluno ativo da Dial Fit."],
           [Search, "Uma inscrição por CPF", "O cadastro é individual e será conferido pela equipe."],
-          [Gift, "Três vencedores", "Cada pai sorteado recebe um dos três prêmios da campanha."],
+          [Gift, "Sete vencedores", "Cada pai sorteado recebe um dos sete prêmios da campanha."],
         ].map(([Icon, title, copy]) => (
           <article key={String(title)} className="campaign-frame-soft p-5">
             <Icon size={22} className="text-[#55e814]" />
