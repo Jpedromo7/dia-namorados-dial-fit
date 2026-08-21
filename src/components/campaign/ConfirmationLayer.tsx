@@ -1,12 +1,12 @@
 "use client";
 
-import { ArrowLeft, Check, Copy, Dumbbell, Gift, Share2, ShieldCheck, SprayCan, Stethoscope, Trophy } from "lucide-react";
+import { ArrowLeft, Check, Copy, CupSoda, Dumbbell, Gift, HandHeart, Share2, ShieldCheck, SprayCan, Stethoscope, Trophy } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { CAMPAIGN_KICKER, CAMPAIGN_NAME, DIALFIT_LOGO, DRAW_DATE_LABEL, PRIZES } from "@/config/campaign";
 import type { CampaignEntry } from "@/types/campaign";
 
-const prizeIcons = [Dumbbell, Stethoscope, SprayCan];
+const prizeIcons = [Dumbbell, Stethoscope, SprayCan, HandHeart, HandHeart, CupSoda, CupSoda];
 
 export function ConfirmationLayer({
   latestEntry,
@@ -59,11 +59,11 @@ export function ConfirmationLayer({
         </div>
 
         <aside className="campaign-frame p-6 sm:p-7">
-          <div className="flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#55e814]">Premiação</p><h2 className="mt-2 text-2xl font-black text-white">Três prêmios · três vencedores</h2></div><Gift className="text-[#55e814]" size={30} /></div>
+          <div className="flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#55e814]">Premiação</p><h2 className="mt-2 text-2xl font-black text-white">Sete prêmios · sete vencedores</h2></div><Gift className="text-[#55e814]" size={30} /></div>
           <div className="mt-6 grid gap-3">
             {PRIZES.map((prize, index) => {
               const Icon = prizeIcons[index];
-              return <div key={prize.title} className="flex items-center gap-3 rounded-xl border border-white/9 bg-white/[0.03] p-4"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#55e814] text-[#071006]"><Icon size={20} /></span><div><p className="font-bold text-white">{prize.title}</p><p className="text-xs text-[#a8b2aa]">{prize.partner}</p></div></div>;
+              return <div key={prize.id} className="flex items-center gap-3 rounded-xl border border-white/9 bg-white/[0.03] p-4"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#55e814] text-[#071006]"><Icon size={20} /></span><div><p className="font-bold text-white">{prize.title}</p><p className="text-xs text-[#a8b2aa]">{prize.partner}</p></div></div>;
             })}
           </div>
           <p className="mt-5 border-t border-white/10 pt-5 text-sm leading-6 text-[#a8b2aa]">Sorteio em <strong className="text-white">{DRAW_DATE_LABEL}</strong>.</p>
@@ -72,7 +72,7 @@ export function ConfirmationLayer({
 
       <section className="campaign-frame mt-7 p-6 sm:p-8">
         <div className="flex items-center gap-3"><Trophy className="text-[#55e814]" size={27} /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#55e814]">Resultado oficial</p><h2 className="mt-1 text-2xl font-black text-white">{raffleWinners.length ? "Pais vencedores" : "Aguardando o sorteio"}</h2></div></div>
-        {raffleWinners.length ? <div className="mt-6 grid gap-3 md:grid-cols-3">{raffleWinners.map((winner, index) => <div key={winner.id} className="rounded-xl bg-[#55e814] p-5 text-[#071006]"><p className="text-xs font-black uppercase tracking-[0.14em]">{index + 1}º vencedor</p><p className="mt-2 text-xl font-black">{winner.studentName}</p><p className="mt-1 font-semibold">Inscrição {winner.raffleNumber}</p><p className="mt-4 border-t border-[#071006]/20 pt-3 text-sm font-extrabold">{PRIZES[index]?.title} · {PRIZES[index]?.partner}</p></div>)}</div> : <p className="mt-5 text-sm leading-6 text-[#a8b2aa]">Os três vencedores e seus respectivos prêmios aparecerão aqui depois da apuração no painel administrativo.</p>}
+        {raffleWinners.length ? <div className="mt-6 grid gap-3 md:grid-cols-3">{raffleWinners.map((winner, index) => <div key={winner.id} className="rounded-xl bg-[#55e814] p-5 text-[#071006]"><p className="text-xs font-black uppercase tracking-[0.14em]">{index + 1}º vencedor</p><p className="mt-2 text-xl font-black">{winner.studentName}</p><p className="mt-1 font-semibold">Inscrição {winner.raffleNumber}</p><p className="mt-4 border-t border-[#071006]/20 pt-3 text-sm font-extrabold">{PRIZES[index]?.title} · {PRIZES[index]?.partner}</p></div>)}</div> : <p className="mt-5 text-sm leading-6 text-[#a8b2aa]">Os sete vencedores e seus respectivos prêmios aparecerão aqui depois da apuração no painel administrativo.</p>}
       </section>
     </div>
   );

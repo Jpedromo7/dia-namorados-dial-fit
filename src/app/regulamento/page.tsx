@@ -38,12 +38,12 @@ const sections = [
     body: "Toda inscrição começa com status Pendente. A equipe Dial Fit poderá conferir o vínculo ativo do aluno, a consistência dos dados, o aceite do regulamento e o cumprimento das etapas. Somente inscrições com status Validado participarão do sorteio.",
   },
   {
-    title: "6. Prêmio",
-    body: `Serão três vencedores distintos, e cada um receberá um prêmio conforme a ordem da apuração: ${PRIZES.map((prize, index) => `${index + 1}º sorteado — 1 ${prize.title}, oferecido por ${prize.partner}`).join("; ")}. Os itens são pessoais, não convertíveis em dinheiro e serão entregues conforme orientação da Dial Fit e dos parceiros.` ,
+    title: "6. Prêmios",
+    body: `Serão sete vencedores distintos, e cada um receberá um prêmio conforme a ordem da apuração: ${PRIZES.map((prize, index) => `${index + 1}º sorteado — 1 ${prize.title}, oferecido por ${prize.partner}`).join("; ")}. Os itens são pessoais, não convertíveis em dinheiro e serão entregues conforme orientação da Dial Fit e dos parceiros.` ,
   },
   {
     title: "7. Sorteio e resultado",
-    body: "A apuração eletrônica escolherá aleatoriamente três inscrições distintas entre os participantes validados. A posição de cada sorteado definirá o prêmio recebido. O resultado será registrado no painel da campanha e poderá ser divulgado nos canais oficiais da Dial Fit.",
+    body: "A apuração eletrônica escolherá aleatoriamente sete inscrições distintas entre os participantes validados. A posição de cada sorteado definirá o prêmio recebido. O resultado será registrado no painel da campanha e poderá ser divulgado nos canais oficiais da Dial Fit.",
   },
   {
     title: "8. Contato e entrega",
@@ -88,7 +88,7 @@ export default function RulesPage() {
                 <p className="mt-2 text-sm leading-7 text-[#b7c0b9]">{section.body}</p>
               </section>
             ))}
-            <p className="border-t border-white/10 pt-6 text-xs font-semibold uppercase tracking-[0.13em] text-[#6f7b71]">Versão publicada em 12 de agosto de 2026.</p>
+            <p className="border-t border-white/10 pt-6 text-xs font-semibold uppercase tracking-[0.13em] text-[#6f7b71]">Versão atualizada em 21 de agosto de 2026.</p>
           </div>
         </article>
       </div>

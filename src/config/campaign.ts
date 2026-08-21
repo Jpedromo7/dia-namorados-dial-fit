@@ -6,7 +6,7 @@ export const CAMPAIGN_SUBTITLE =
 export const CAMPAIGN_COMPLEMENT =
   "Participação exclusiva para pais que sejam alunos ativos da Dial Fit. Uma inscrição por CPF.";
 
-export const WINNERS_COUNT = 3;
+export const WINNERS_COUNT = 7;
 export const DRAW_DATE = "2026-08-21T18:00:00-03:00";
 export const DRAW_DATE_LABEL = "21 de agosto de 2026, às 18h";
 export const REGISTRATION_END_DATE = "2026-08-21T17:59:59-03:00";
@@ -21,19 +21,46 @@ export const CAMPAIGN_UNITS = ["Dial Fit"] as const;
 
 export const PRIZES = [
   {
+    id: "creatina",
     title: "Creatina",
     partner: "RR Suplementos",
     description: "1 unidade de creatina para reforçar a rotina de treino.",
   },
   {
+    id: "consulta-online",
     title: "Consulta online",
     partner: "Dra. Dayanne Botelho",
     description: "1 consulta online com acompanhamento profissional.",
   },
   {
+    id: "kit-limpeza",
     title: "Kit de limpeza",
     partner: "Mult Limpo",
     description: "1 kit especial de produtos de limpeza.",
+  },
+  {
+    id: "massagem-1",
+    title: "Massagem com Pedro",
+    partner: "Massoterapeuta Pedro",
+    description: "1 sessão de massagem com o massoterapeuta Pedro.",
+  },
+  {
+    id: "massagem-2",
+    title: "Massagem com Pedro",
+    partner: "Massoterapeuta Pedro",
+    description: "1 sessão de massagem com o massoterapeuta Pedro.",
+  },
+  {
+    id: "copo-dialfit-1",
+    title: "Copo DialFit",
+    partner: "DialFit Academia",
+    description: "1 copo exclusivo da DialFit.",
+  },
+  {
+    id: "copo-dialfit-2",
+    title: "Copo DialFit",
+    partner: "DialFit Academia",
+    description: "1 copo exclusivo da DialFit.",
   },
 ] as const;
 
