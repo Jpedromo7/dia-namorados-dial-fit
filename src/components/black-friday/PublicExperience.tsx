@@ -110,11 +110,33 @@ export function PublicExperience() {
   }, []);
 
   useEffect(() => {
+    let disposed = false;
     const ringtone = new Audio("/audio/dialfit-incoming-call.mp3");
     ringtone.preload = "auto";
     ringtone.loop = true;
     ringtone.volume = 0.64;
     ringtoneRef.current = ringtone;
+
+    const attempt = ++ringtoneAttemptRef.current;
+    void ringtone.play().then(() => {
+      if (disposed || attempt !== ringtoneAttemptRef.current || callAcceptedRef.current || document.hidden) {
+        stopAudio(ringtone);
+        return;
+      }
+      soundEnabledRef.current = true;
+      setSoundEnabled(true);
+    }).catch(() => {
+      if (!disposed && attempt === ringtoneAttemptRef.current) {
+        soundEnabledRef.current = false;
+        setSoundEnabled(false);
+        setSoundBlocked(true);
+      }
+    }).finally(() => {
+      if (!disposed && attempt === ringtoneAttemptRef.current) {
+        soundPendingRef.current = false;
+        setSoundPending(false);
+      }
+    });
 
     const pauseAllSound = () => {
       ringtoneAttemptRef.current += 1;
@@ -134,6 +156,9 @@ export function PublicExperience() {
     document.addEventListener("visibilitychange", pauseForBackground);
     window.addEventListener("pagehide", pauseAllSound);
     return () => {
+      disposed = true;
+      ringtoneAttemptRef.current += 1;
+      soundPendingRef.current = false;
       document.removeEventListener("visibilitychange", pauseForBackground);
       window.removeEventListener("pagehide", pauseAllSound);
       stopAudio(ringtoneRef.current);

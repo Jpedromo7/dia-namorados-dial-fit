@@ -541,10 +541,10 @@ body {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto auto;
-    align-content: start;
+    align-content: space-between;
     min-height: 0;
     row-gap: clamp(12px, 2.3dvh, 18px);
-    padding: clamp(7px, 1.4dvh, 12px) 0 0;
+    padding: clamp(7px, 1.4dvh, 12px) 0 clamp(18px, 3dvh, 28px);
   }
   .bf-call-copy { grid-column: 1; grid-row: 1; align-self: center; padding: 0; text-align: center; }
   .bf-call-copy .bf-eyebrow { justify-content: center; margin: 0 auto 6px; font-size: 8px; letter-spacing: .19em; }
@@ -576,6 +576,7 @@ body {
   .bf-call-secondary-actions {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr) minmax(0, 1.2fr);
+    grid-template-rows: 42px auto;
     gap: 2px;
     margin-top: 5px;
   }
@@ -592,8 +593,10 @@ body {
     text-align: center;
   }
   .bf-call-secondary-actions > .bf-skip-link { white-space: nowrap; }
-  .bf-call-secondary-actions .bf-incoming-audio { min-width: 0; margin: 0; }
+  .bf-call-secondary-actions .bf-incoming-audio { display: contents; }
   .bf-call-secondary-actions .bf-audio-toggle {
+    grid-column: 2;
+    grid-row: 1;
     min-width: 0;
     min-height: 42px;
     justify-content: center;
@@ -606,7 +609,7 @@ body {
     white-space: nowrap;
   }
   .bf-call-secondary-actions .bf-audio-toggle svg { width: 14px; height: 14px; }
-  .bf-call-secondary-actions .bf-audio-note { max-width: min(88vw, 320px); margin: 2px auto 0; font-size: 9px; line-height: 1.3; }
+  .bf-call-secondary-actions .bf-audio-note { grid-column: 1 / -1; grid-row: 2; width: min(88vw, 320px); max-width: 100%; margin: 0 auto; font-size: 9px; line-height: 1.3; }
   .bf-public.bf-stage-incoming .bf-footer,
   .bf-public.bf-stage-connected .bf-footer {
     min-height: 23px;

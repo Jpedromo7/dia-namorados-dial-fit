@@ -172,7 +172,7 @@ export function OriginalCallInterface({
                 {soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
                 {soundPending ? "Ativando…" : soundEnabled ? "Silenciar" : "Ativar som"}
               </button>
-              {soundBlocked ? <p className="bf-audio-note" role="status">O navegador não liberou o áudio. Você pode atender em silêncio.</p> : null}
+              {soundBlocked ? <p className="bf-audio-note" role="status">O navegador bloqueou. Toque em “Ativar som” ou siga sem som.</p> : null}
             </div>
             <button className="bf-skip-link" type="button" onClick={onSkip} disabled={phase !== "incoming"}>
               Pular introdução <ArrowDownRight size={14} />
