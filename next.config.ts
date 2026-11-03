@@ -38,6 +38,20 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/campanha-namorados/regulamento-dia-dos-namorados-dial-fit.pdf",
+        destination: "/privacidade",
+        permanent: false,
+      },
+      {
+        source: "/campanha-namorados/regulamento-dia-dos-namorados-dial-fit.docx",
+        destination: "/privacidade",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

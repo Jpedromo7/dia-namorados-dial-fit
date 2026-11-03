@@ -1,21 +1,13 @@
-import { CampaignFlow } from "@/components/campaign/CampaignFlow";
-import {
-  getPublicCampaignEntries,
-  getPublicRaffleWinners,
-} from "@/lib/campaign-db";
+import type { Metadata } from "next";
+import { PublicExperience } from "@/components/black-friday/PublicExperience";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  const [entries, raffleWinners] = await Promise.all([
-    getPublicCampaignEntries(),
-    getPublicRaffleWinners(),
-  ]);
+export const metadata: Metadata = {
+  title: "Black Friday de Arrepiar 2026 | Dial Fit",
+  description: "Entre na pré-lista da Black Friday de Arrepiar da Dial Fit e receba as condições da campanha diretamente da equipe.",
+};
 
-  return (
-    <CampaignFlow
-      initialEntries={entries}
-      initialRaffleWinners={raffleWinners}
-    />
-  );
+export default function Home() {
+  return <PublicExperience audioSrc={process.env.NEXT_PUBLIC_BLACK_FRIDAY_AUDIO_URL ?? ""} />;
 }
