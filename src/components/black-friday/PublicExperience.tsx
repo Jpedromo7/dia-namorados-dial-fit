@@ -2,65 +2,78 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, type FormEvent, type MouseEvent, type PointerEvent } from "react";
-import {
-  ArrowDownRight,
-  ArrowRight,
-  Check,
-  CheckCircle2,
-  PhoneCall,
-  Share2,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { ArrowRight, Check, CheckCircle2, Share2 } from "lucide-react";
 import { DIALFIT_LOGO } from "@/config/campaign";
 import { formatBrazilianPhone, normalizeBrazilianPhone } from "@/lib/black-friday";
+import {
+  CallStyleSwitcher,
+  CampaignReveal,
+  IPhoneCallInterface,
+  OriginalCallInterface,
+  type CallPhase,
+  type CallStyle,
+} from "./CallExperience";
 
 type UTM = { source: string; medium: string; campaign: string };
-type Stage = "incoming" | "connected" | "reveal" | "form" | "success";
+type Stage = CallPhase | "reveal" | "form" | "success";
+type SoundEffect = "connected" | "ended" | "reveal";
 
-const LINES = [
-  "Tem uma coisa chegando na Dial Fit...",
-  "E ninguém está preparado.",
-  "Só vou te dizer uma coisa...",
-  "Vai ser de arrepiar.",
-];
-
-function playConnectionSignal() {
+function playCallEffect(contextRef: { current: AudioContext | null }, enabledRef: { current: boolean }, effect: SoundEffect) {
+  if (!enabledRef.current) return;
   const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AudioContextClass) return;
-  const context = new AudioContextClass();
-  const now = context.currentTime;
-  [392, 494, 587].forEach((frequency, index) => {
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    const start = now + index * 0.17;
-    oscillator.type = "sine";
-    oscillator.frequency.value = frequency;
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(0.055, start + 0.025);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.15);
-    oscillator.connect(gain);
-    gain.connect(context.destination);
-    oscillator.start(start);
-    oscillator.stop(start + 0.16);
-  });
-  window.setTimeout(() => void context.close(), 900);
+
+  try {
+    const context = contextRef.current ?? new AudioContextClass();
+    contextRef.current = context;
+    if (context.state === "suspended") void context.resume().catch(() => undefined);
+    const notes = {
+      connected: [{ frequency: 660, offset: 0, duration: 0.12 }, { frequency: 880, offset: 0.13, duration: 0.13 }],
+      ended: [{ frequency: 392, offset: 0, duration: 0.18 }],
+      reveal: [{ frequency: 523, offset: 0, duration: 0.22 }, { frequency: 659, offset: 0.04, duration: 0.24 }, { frequency: 784, offset: 0.08, duration: 0.26 }],
+    }[effect];
+    const now = context.currentTime;
+
+    notes.forEach(({ frequency, offset, duration }) => {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      const start = now + offset;
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.035, start + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+      oscillator.start(start);
+      oscillator.stop(start + duration + 0.01);
+    });
+  } catch {
+    // Audio is optional; browser restrictions must never block the visual flow.
+  }
 }
 
-function getLineIndex(seconds: number) {
-  if (seconds < 2) return 0;
-  if (seconds < 4) return 1;
-  if (seconds < 6) return 2;
-  return 3;
+function closeCallAudio(contextRef: { current: AudioContext | null }) {
+  const context = contextRef.current;
+  contextRef.current = null;
+  if (context && context.state !== "closed") void context.close().catch(() => undefined);
 }
 
-export function PublicExperience({ audioSrc = "" }: { audioSrc?: string }) {
+export function PublicExperience({
+  initialCallStyle = "original",
+  showStyleSwitcher = false,
+}: {
+  initialCallStyle?: CallStyle;
+  showStyleSwitcher?: boolean;
+}) {
   const [stage, setStage] = useState<Stage>("incoming");
-  const [drag, setDrag] = useState(0);
-  const [sliderWidth, setSliderWidth] = useState(0);
+  const [callStyle, setCallStyle] = useState<CallStyle>(initialCallStyle);
   const [elapsed, setElapsed] = useState(0);
-  const [muted, setMuted] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [declineReady, setDeclineReady] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -76,22 +89,58 @@ export function PublicExperience({ audioSrc = "" }: { audioSrc?: string }) {
     };
   });
   const [startedAt] = useState(() => Date.now());
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const pointerStart = useRef(0);
-  const lastDrag = useRef(0);
-  const dragGeneratedClick = useRef(false);
+  const callStartedAt = useRef(0);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const soundEnabledRef = useRef(true);
 
   useEffect(() => {
-    if (stage !== "connected") return;
-    const started = Date.now();
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePreference = () => setReducedMotion(mediaQuery.matches);
+    updatePreference();
+    mediaQuery.addEventListener("change", updatePreference);
+    return () => mediaQuery.removeEventListener("change", updatePreference);
+  }, []);
+
+  useEffect(() => () => closeCallAudio(audioContextRef), []);
+
+  useEffect(() => {
+    if (stage !== "connected" && stage !== "message") return;
+    const messageAt = reducedMotion ? 220 : 450;
+    const endAt = reducedMotion ? 1450 : 2600;
     const interval = window.setInterval(() => {
-      const seconds = Math.floor((Date.now() - started) / 1000);
-      setElapsed(seconds);
-      if (seconds >= (audioSrc ? 30 : 9)) setStage("reveal");
-    }, 250);
+      const elapsedMs = Math.max(0, Date.now() - callStartedAt.current);
+      setElapsed(Math.floor(elapsedMs / 1000));
+      if (elapsedMs >= endAt) {
+        setStage("ended");
+        playCallEffect(audioContextRef, soundEnabledRef, "ended");
+      } else if (stage === "connected" && elapsedMs >= messageAt) {
+        setStage("message");
+      }
+    }, 100);
     return () => window.clearInterval(interval);
-  }, [stage, audioSrc]);
+  }, [stage, reducedMotion]);
+
+  useEffect(() => {
+    if (stage !== "ended") return;
+    const timeout = window.setTimeout(() => setStage("reveal"), reducedMotion ? 280 : 570);
+    return () => window.clearTimeout(timeout);
+  }, [stage, reducedMotion]);
+
+  useEffect(() => {
+    if (stage !== "declined") return;
+    const timeout = window.setTimeout(() => setDeclineReady(true), 420);
+    return () => window.clearTimeout(timeout);
+  }, [stage]);
+
+  useEffect(() => {
+    if (stage !== "reveal") return;
+    playCallEffect(audioContextRef, soundEnabledRef, "reveal");
+    const timeout = window.setTimeout(() => closeCallAudio(audioContextRef), 800);
+    return () => {
+      window.clearTimeout(timeout);
+      closeCallAudio(audioContextRef);
+    };
+  }, [stage]);
 
   useEffect(() => {
     if (stage === "form") {
@@ -101,70 +150,41 @@ export function PublicExperience({ audioSrc = "" }: { audioSrc?: string }) {
 
   function answerCall() {
     if (stage !== "incoming") return;
+    callStartedAt.current = Date.now();
     setStage("connected");
     setElapsed(0);
-    if (!muted) playConnectionSignal();
-    if (audioSrc && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.muted = muted;
-      void audioRef.current.play().catch(() => undefined);
-    }
+    setDeclineReady(false);
+    playCallEffect(audioContextRef, soundEnabledRef, "connected");
+  }
+
+  function declineCall() {
+    setDeclineReady(false);
+    setStage("declined");
   }
 
   function finishCall() {
-    audioRef.current?.pause();
+    if (stage !== "connected" && stage !== "message") return;
+    setStage("ended");
+    playCallEffect(audioContextRef, soundEnabledRef, "ended");
+  }
+
+  function skipToReveal() {
+    closeCallAudio(audioContextRef);
     setStage("reveal");
   }
 
-  function onPointerDown(event: PointerEvent<HTMLButtonElement>) {
-    if (!sliderRef.current) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    pointerStart.current = event.clientX - drag;
-    dragGeneratedClick.current = false;
-    setSliderWidth(sliderRef.current.clientWidth);
+  function toggleSound() {
+    const next = !soundEnabledRef.current;
+    soundEnabledRef.current = next;
+    setSoundEnabled(next);
+    if (!next) closeCallAudio(audioContextRef);
   }
 
-  function onPointerMove(event: PointerEvent<HTMLButtonElement>) {
-    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-    const max = Math.max(0, sliderWidth - 58);
-    const next = Math.max(0, Math.min(max, event.clientX - pointerStart.current));
-    if (next > 5) dragGeneratedClick.current = true;
-    lastDrag.current = next;
-    setDrag(next);
-    if (max > 0 && next >= max * 0.84) answerCall();
-  }
-
-  function onPointerUp(event: PointerEvent<HTMLButtonElement>) {
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-    if (stage === "incoming" && sliderWidth > 0 && lastDrag.current >= (sliderWidth - 58) * 0.68) {
-      answerCall();
-      return;
-    }
-    if (stage === "incoming") setDrag(0);
-    lastDrag.current = 0;
-  }
-
-  function onSliderClick(event: MouseEvent<HTMLButtonElement>) {
-    if (dragGeneratedClick.current) {
-      dragGeneratedClick.current = false;
-      event.preventDefault();
-      return;
-    }
-    answerCall();
-  }
-
-  function toggleAudio() {
-    setMuted((current) => {
-      const next = !current;
-      if (audioRef.current) {
-        audioRef.current.muted = next;
-        if (next) audioRef.current.pause();
-        else if (stage === "connected" && audioSrc) void audioRef.current.play().catch(() => undefined);
-      }
-      return next;
-    });
+  function changeCallStyle(nextStyle: CallStyle) {
+    setCallStyle(nextStyle);
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set("callStyle", nextStyle);
+    window.location.assign(nextUrl.toString());
   }
 
   async function submitLead(event: FormEvent<HTMLFormElement>) {
@@ -225,117 +245,59 @@ export function PublicExperience({ audioSrc = "" }: { audioSrc?: string }) {
     }
   }
 
-  const lineIndex = getLineIndex(elapsed);
-  const formattedSeconds = `00:${String(elapsed).padStart(2, "0")}`;
+  const isCallStage = stage === "incoming" || stage === "connected" || stage === "message" || stage === "ended" || stage === "declined";
+  const callPhase = isCallStage ? stage as CallPhase : null;
+  const phoneFullScreen = callStyle === "iphone" && isCallStage;
 
   return (
-    <main className={`bf-public bf-stage-${stage}`}>
-      {audioSrc ? <audio ref={audioRef} src={audioSrc} preload="none" onEnded={finishCall} /> : null}
+    <main className={`bf-public bf-stage-${stage}${phoneFullScreen ? " bf-phone-mode" : ""}`}>
       <div className="bf-atmosphere" aria-hidden="true" />
       <div className="bf-grain" aria-hidden="true" />
 
-      <header className="bf-header">
-        <Link href="/" aria-label="Dial Fit, início">
-          <Image src={DIALFIT_LOGO} alt="Dial Fit Academia" width={2048} height={696} priority className="bf-logo" />
-        </Link>
-        <div className="bf-edition"><span className="bf-live-dot" /> BLACK EDITION <span>·</span> 2026</div>
-      </header>
-
-      {stage === "incoming" && (
-        <section className="bf-call-screen" aria-labelledby="incoming-title">
-          <div className="bf-call-copy">
-            <p className="bf-eyebrow"><span className="bf-eyebrow-line" /> CHAMADA RECEBIDA</p>
-            <h1 id="incoming-title" className="bf-call-title">Uma ligação<br /><span>pode mudar tudo.</span></h1>
-            <p className="bf-call-subtitle">Atenda. Tem algo chegando à Dial Fit.</p>
+      {!phoneFullScreen && (
+        <header className="bf-header">
+          <Link href="/" aria-label="Dial Fit, início">
+            <Image src={DIALFIT_LOGO} alt="Dial Fit Academia" width={2048} height={696} priority className="bf-logo" />
+          </Link>
+          <div className="bf-header-controls">
+            <div className="bf-edition"><span className="bf-live-dot" /> BLACK EDITION <span>·</span> 2026</div>
+            {isCallStage ? <CallStyleSwitcher style={callStyle} visible={showStyleSwitcher} onChange={changeCallStyle} /> : null}
           </div>
-
-          <div className="bf-call-object" aria-label="Chamada recebida de um contato desconhecido">
-            <div className="bf-orbit bf-orbit-outer" />
-            <div className="bf-orbit bf-orbit-middle" />
-            <div className="bf-orbit bf-orbit-inner" />
-            <div className="bf-call-dial">
-              <span className="bf-call-dial-top">LINHA DESCONHECIDA</span>
-              <div className="bf-call-icon"><PhoneCall size={31} strokeWidth={1.7} /></div>
-              <span className="bf-call-dial-name">DESCONHECIDO</span>
-              <span className="bf-call-dial-status"><i /> Aguardando resposta</span>
-            </div>
-            <div className="bf-coordinate bf-coordinate-top">DF · 2026</div>
-            <div className="bf-coordinate bf-coordinate-bottom">SINAL ENTRANTE / 01</div>
-          </div>
-
-          <div className="bf-answer-zone">
-            <p className="bf-answer-label">DESLIZE PARA ATENDER <ArrowRight size={14} /></p>
-            <div className="bf-slider" ref={sliderRef}>
-              <span className="bf-slider-progress" style={{ width: `${drag + 56}px` }} />
-              <span className="bf-slider-text" aria-hidden="true">DESLIZE PARA ATENDER</span>
-              <button
-                className="bf-slider-handle"
-                type="button"
-                aria-label="Deslizar ou ativar para atender a ligação"
-                onClick={onSliderClick}
-                onPointerDown={onPointerDown}
-                onPointerMove={onPointerMove}
-                onPointerUp={onPointerUp}
-                onPointerCancel={onPointerUp}
-                style={{ transform: `translateX(${drag}px)` }}
-              >
-                <ArrowRight size={20} />
-              </button>
-            </div>
-            <button className="bf-text-button" type="button" onClick={answerCall}>Ou toque aqui para atender</button>
-          </div>
-
-          <button className="bf-skip-link" type="button" onClick={() => setStage("reveal")}>Pular introdução <ArrowDownRight size={14} /></button>
-        </section>
+        </header>
       )}
 
-      {stage === "connected" && (
-        <section className="bf-connected" aria-labelledby="connected-title">
-          <p className="bf-eyebrow"><span className="bf-eyebrow-line" /> CHAMADA CONECTADA</p>
-          <div className="bf-connected-mark" aria-hidden="true">
-            <span className="bf-connected-ring bf-connected-ring-a" />
-            <span className="bf-connected-ring bf-connected-ring-b" />
-            <div className="bf-call-icon"><PhoneCall size={30} strokeWidth={1.7} /></div>
-          </div>
-          <h1 id="connected-title" className="bf-connected-name">DESCONHECIDO</h1>
-          <p className="bf-call-timer">{formattedSeconds}</p>
-          <div className="bf-waveform" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
-          <p className="bf-caption" aria-live="polite">“{LINES[lineIndex]}”</p>
-          <p className="bf-caption-note">Uma mensagem para você.</p>
-          <div className="bf-call-controls">
-            <button type="button" className="bf-audio-toggle" onClick={toggleAudio} aria-pressed={muted}>
-              {muted ? <VolumeX size={17} /> : <Volume2 size={17} />}
-              {muted ? "Áudio silenciado" : "Silenciar áudio"}
-            </button>
-            <button type="button" className="bf-skip-link" onClick={finishCall}>Pular <ArrowRight size={14} /></button>
-          </div>
-        </section>
+      {callPhase && (
+        callStyle === "iphone" ? (
+          <IPhoneCallInterface
+            phase={callPhase}
+            elapsedSeconds={elapsed}
+            soundEnabled={soundEnabled}
+            onToggleSound={toggleSound}
+            onAnswer={answerCall}
+            onDecline={declineCall}
+            onEnd={finishCall}
+            onSkip={skipToReveal}
+            declineReady={declineReady}
+            style={callStyle}
+            showStyleSwitcher={showStyleSwitcher}
+            onStyleChange={changeCallStyle}
+          />
+        ) : (
+          <OriginalCallInterface
+            phase={callPhase}
+            elapsedSeconds={elapsed}
+            soundEnabled={soundEnabled}
+            onToggleSound={toggleSound}
+            onAnswer={answerCall}
+            onDecline={declineCall}
+            onEnd={finishCall}
+            onSkip={skipToReveal}
+            declineReady={declineReady}
+          />
+        )
       )}
 
-      {stage === "reveal" && (
-        <section className="bf-reveal" aria-labelledby="reveal-title">
-          <p className="bf-reveal-kicker"><span /> DIAL FIT APRESENTA <span /></p>
-          <div className="bf-title-lockup">
-            <p className="bf-title-outline">BLACK</p>
-            <p className="bf-title-friday">FRIDAY</p>
-            <h1 id="reveal-title" className="bf-title-shiver">DE ARREPIAR</h1>
-          </div>
-          <div className="bf-reveal-copy">
-            <p className="bf-reveal-lead">A ESPERA ESTÁ QUASE ACABANDO.</p>
-            <p>Algo extraordinário está chegando à Dial Fit.<br />E você pode ser um dos primeiros a receber as novidades.</p>
-          </div>
-          <div className="bf-reveal-cta">
-            <div className="bf-cta-copy">
-              <span className="bf-section-label">O PRÓXIMO CAPÍTULO É SEU</span>
-              <p><strong>AS CONDIÇÕES ESPECIAIS ESTÃO CHEGANDO.</strong><br />Entre para nossa pré-lista e receba as informações diretamente da nossa equipe.</p>
-            </div>
-            <button className="bf-primary-button" type="button" onClick={() => setStage("form")}>
-              QUERO ENTRAR NA PRÉ-LISTA <ArrowRight size={19} />
-            </button>
-          </div>
-          <button className="bf-skip-link bf-back-link" type="button" onClick={() => setStage("incoming")}>Voltar à ligação</button>
-        </section>
-      )}
+      {stage === "reveal" && <CampaignReveal onContinue={() => setStage("form")} onReplay={() => setStage("incoming")} />}
 
       {stage === "form" && (
         <section className="bf-form-screen" aria-labelledby="form-title">
@@ -396,11 +358,13 @@ export function PublicExperience({ audioSrc = "" }: { audioSrc?: string }) {
         </section>
       )}
 
-      <footer className="bf-footer">
-        <span>© {new Date().getFullYear()} DIAL FIT</span>
-        <Link href="/privacidade">PRIVACIDADE</Link>
-        <span className="bf-footer-signal"><span /> LINHA SEGURA</span>
-      </footer>
+      {!phoneFullScreen && (
+        <footer className="bf-footer">
+          <span>© {new Date().getFullYear()} DIAL FIT</span>
+          <Link href="/privacidade">PRIVACIDADE</Link>
+          <span className="bf-footer-signal"><span /> LINHA SEGURA</span>
+        </footer>
+      )}
     </main>
   );
 }

@@ -8,6 +8,14 @@ export const metadata: Metadata = {
   description: "Entre na pré-lista da Black Friday de Arrepiar da Dial Fit e receba as condições da campanha diretamente da equipe.",
 };
 
-export default function Home() {
-  return <PublicExperience audioSrc={process.env.NEXT_PUBLIC_BLACK_FRIDAY_AUDIO_URL ?? ""} />;
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ callStyle?: string | string[] }>;
+}) {
+  const { callStyle } = await searchParams;
+  const initialCallStyle = callStyle === "iphone" ? "iphone" : "original";
+  const showStyleSwitcher = process.env.NODE_ENV !== "production" || process.env.VERCEL_ENV === "preview";
+
+  return <PublicExperience initialCallStyle={initialCallStyle} showStyleSwitcher={showStyleSwitcher} />;
 }
