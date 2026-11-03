@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import {
   Activity, ArrowRight, CalendarClock, Check,
@@ -8,6 +9,7 @@ import {
   Filter, LayoutDashboard, ListFilter, LogOut, MessageCircle, Plus, Search,
   ShieldCheck, Users, X,
 } from "lucide-react";
+import { neonAuthClient } from "@/lib/neon/auth-client";
 import {
   BLACK_FRIDAY_ROLE_LABELS, BLACK_FRIDAY_STATUSES, BLACK_FRIDAY_STATUS_LABELS,
   formatBrazilianPhone, toWhatsAppNumber, type BlackFridayActivity,
@@ -63,6 +65,12 @@ function PanelFrame({ children, view, staff, isAdmin, notice, setNotice }: {
   children: ReactNode; view: View; staff: Pick<BlackFridayStaff, "email" | "role">;
   isAdmin: boolean; notice: Notice; setNotice: (notice: Notice) => void;
 }) {
+  const router = useRouter();
+  async function signOut() {
+    await neonAuthClient.signOut();
+    router.replace("/admin/login");
+  }
+
   return <main className="min-h-screen bg-[#f4f6f3] text-[#17221b]">
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-[250px] flex-col border-r border-[#e2e8e3] bg-white lg:flex">
       <Link href="/admin/black-friday" className="flex h-[82px] items-center gap-3 border-b border-[#edf0ed] px-6">
@@ -74,7 +82,7 @@ function PanelFrame({ children, view, staff, isAdmin, notice, setNotice }: {
       </nav>
       <div className="mt-auto border-t border-[#edf0ed] p-4">
         <div className="mb-3 rounded-lg bg-[#f6f8f5] p-3"><p className="truncate text-sm font-bold">{staff.email}</p><p className="mt-1 text-xs text-[#77837a]">{BLACK_FRIDAY_ROLE_LABELS[staff.role]}</p></div>
-        <form action="/auth/sign-out" method="post"><button className="flex h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-semibold text-[#68756b] hover:bg-[#f5f7f4]"><LogOut size={16} /> Sair</button></form>
+        <button type="button" onClick={signOut} className="flex h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-semibold text-[#68756b] hover:bg-[#f5f7f4]"><LogOut size={16} /> Sair</button>
       </div>
     </aside>
     <div className="lg:pl-[250px]">
@@ -82,7 +90,7 @@ function PanelFrame({ children, view, staff, isAdmin, notice, setNotice }: {
         <div className="flex items-center gap-3"><Link className="grid size-9 place-items-center rounded-lg text-[#59665d] hover:bg-[#f3f6f2] lg:hidden" href="/admin/black-friday"><Activity size={18} /></Link><span className="text-sm font-bold text-[#344139]">{panelNavigation.find((item) => item.href === (view === "leads" ? "/admin/black-friday/leads" : view === "reports" ? "/admin/black-friday/relatorios" : view === "team" ? "/admin/black-friday/equipe" : "/admin/black-friday"))?.label}</span></div>
         <div className="hidden items-center gap-2 text-xs font-medium text-[#78847b] sm:flex"><span className="size-2 rounded-full bg-[#48bf2b]" /> Ambiente protegido · Fortaleza</div>
         <span className="max-w-[135px] truncate text-right text-[10px] font-semibold text-[#68756b] sm:hidden">{staff.email}</span>
-        <form action="/auth/sign-out" method="post" className="lg:hidden"><button aria-label="Sair" className="grid size-9 place-items-center rounded-lg text-[#66736a]"><LogOut size={17} /></button></form>
+        <button type="button" onClick={signOut} aria-label="Sair" className="grid size-9 place-items-center rounded-lg text-[#66736a] lg:hidden"><LogOut size={17} /></button>
       </header>
       <nav className="flex gap-1 overflow-x-auto border-b border-[#e2e8e3] bg-white px-3 py-2 lg:hidden">
         {panelNavigation.filter((item) => !item.admin || isAdmin).map(({ href, label }) => <Link key={href} href={href} className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-bold ${view === (href.endsWith("leads") ? "leads" : href.endsWith("relatorios") ? "reports" : href.endsWith("equipe") ? "team" : "dashboard") ? "bg-[#edf8e9] text-[#287914]" : "text-[#68756b]"}`}>{label}</Link>)}

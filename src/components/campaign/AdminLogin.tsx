@@ -2,7 +2,7 @@
 
 import { LogIn } from "lucide-react";
 import { useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { neonAuthClient } from "@/lib/neon/auth-client";
 
 export function AdminLogin() {
   const [error, setError] = useState("");
@@ -11,22 +11,13 @@ export function AdminLogin() {
   async function signInWithGoogle() {
     setError("");
     setIsGoogleOpening(true);
-    const supabase = createSupabaseBrowserClient();
-    if (!supabase) {
-      setIsGoogleOpening(false);
-      setError("O login com Google ainda não está configurado.");
-      return;
-    }
-
-    const { error: googleError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/admin/black-friday")}`,
-        queryParams: { prompt: "select_account" },
-      },
-    });
-
-    if (googleError) {
+    try {
+      await neonAuthClient.signIn.social({
+        provider: "google",
+        callbackURL: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/admin/black-friday")}`,
+        scopes: ["openid", "email", "profile"],
+      });
+    } catch {
       setIsGoogleOpening(false);
       setError("Não foi possível abrir o login com Google. Confira a configuração do provedor.");
     }

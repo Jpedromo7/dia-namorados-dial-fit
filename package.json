@@ -9,10 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@neon/auth": "0.8.2",
+    "@neondatabase/serverless": "1.2.0",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
     "lucide-react": "^1.16.0",
-    "next": "^16.3.0",
+    "next": "16.4.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
@@ -22,7 +24,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "eslint": "^9",
-    "eslint-config-next": "^16.3.0",
+    "eslint-config-next": "16.4.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

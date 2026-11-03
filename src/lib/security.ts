@@ -50,9 +50,25 @@ export function assertSameOrigin(request: Request) {
     return;
   }
 
-  const requestOrigin = new URL(request.url).origin;
+  const requestUrl = new URL(request.url);
+  const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const protocols = new Set([requestUrl.protocol.slice(0, -1)]);
+  if (forwardedProtocol === "http" || forwardedProtocol === "https") protocols.add(forwardedProtocol);
 
-  if (origin !== requestOrigin) {
+  const hosts = new Set([request.headers.get("host"), request.headers.get("x-forwarded-host")?.split(",")[0]?.trim()]);
+  const allowedOrigins = new Set([requestUrl.origin]);
+  for (const host of hosts) {
+    if (!host) continue;
+    for (const protocol of protocols) {
+      try {
+        allowedOrigins.add(new URL(`${protocol}://${host}`).origin);
+      } catch {
+        // Ignore invalid proxy host headers and keep checking other candidates.
+      }
+    }
+  }
+
+  if (!allowedOrigins.has(origin)) {
     throw new HttpError(403, "Origem da requisição não permitida.");
   }
 }

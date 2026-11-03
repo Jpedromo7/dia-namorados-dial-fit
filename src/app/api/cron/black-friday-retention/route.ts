@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { BLACK_FRIDAY_CAMPAIGN_SLUG } from "@/lib/black-friday";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { queryNeon } from "@/lib/neon/database";
 
 export const dynamic = "force-dynamic";
 
@@ -18,20 +18,18 @@ export async function GET(request: Request) {
   if (!hasValidCronAuthorization(request)) {
     return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
   }
-  const supabase = createSupabaseAdminClient();
-  if (!supabase) return NextResponse.json({ message: "Banco não configurado." }, { status: 503 });
-
   const now = new Date();
   const leadRetentionCutoff = new Date(now);
   leadRetentionCutoff.setUTCFullYear(leadRetentionCutoff.getUTCFullYear() - 1);
   const rateRetentionCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  const [{ count: deletedLeads, error: leadError }, { count: deletedRateKeys, error: rateError }] = await Promise.all([
-    supabase.from("black_friday_leads").delete({ count: "exact" }).eq("campaign_slug", BLACK_FRIDAY_CAMPAIGN_SLUG).lt("created_at", leadRetentionCutoff.toISOString()),
-    supabase.from("black_friday_rate_limits").delete({ count: "exact" }).lt("window_started_at", rateRetentionCutoff.toISOString()),
-  ]);
-  if (leadError || rateError) {
+  try {
+    const [leadRows, rateRows] = await Promise.all([
+      queryNeon<{ id: string }>("delete from public.black_friday_leads where campaign_slug = $1 and created_at < $2::timestamptz returning id", [BLACK_FRIDAY_CAMPAIGN_SLUG, leadRetentionCutoff.toISOString()]),
+      queryNeon<{ request_key: string }>("delete from public.black_friday_rate_limits where window_started_at < $1::timestamptz returning request_key", [rateRetentionCutoff.toISOString()]),
+    ]);
+    return NextResponse.json({ deletedLeads: leadRows.length, deletedRateKeys: rateRows.length });
+  } catch {
     return NextResponse.json({ message: "Não foi possível aplicar a retenção agora." }, { status: 503 });
   }
-  return NextResponse.json({ deletedLeads: deletedLeads ?? 0, deletedRateKeys: deletedRateKeys ?? 0 });
 }

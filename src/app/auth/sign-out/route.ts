@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { getNeonAuth } from "@/lib/neon/auth-server";
 import { assertSameOrigin } from "@/lib/security";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -10,9 +10,6 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }
-
-  const supabase = await createSupabaseServerClient();
-  await supabase?.auth.signOut();
-
+  await getNeonAuth()?.signOut();
   return NextResponse.redirect(new URL("/admin/login", request.url));
 }

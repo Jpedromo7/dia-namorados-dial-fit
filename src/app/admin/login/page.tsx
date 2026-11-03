@@ -6,8 +6,6 @@ import Link from "next/link";
 import { AdminLogin } from "@/components/campaign/AdminLogin";
 import { DIALFIT_LOGO } from "@/config/campaign";
 import { getCurrentBlackFridayStaff } from "@/lib/black-friday-auth";
-import { hasSupabaseAdminConfig } from "@/lib/supabase/admin";
-import { hasSupabasePublicConfig } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Acesso da equipe | Black Friday Dial Fit" };
@@ -23,7 +21,7 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
   const code = Array.isArray(params.error) ? params.error[0] : params.error;
   const staff = await getCurrentBlackFridayStaff();
   if (staff) redirect("/admin/black-friday");
-  const configured = hasSupabasePublicConfig() && hasSupabaseAdminConfig();
+  const configured = Boolean(process.env.NEON_AUTH_BASE_URL && process.env.NEON_AUTH_COOKIE_SECRET && process.env.DATABASE_URL);
 
   return <main className="campaign-bg min-h-screen px-5 py-8 text-white">
     <div className="campaign-grid pointer-events-none fixed inset-0" />

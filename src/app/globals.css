@@ -400,13 +400,8 @@ body {
   .bf-slider-progress { transition: none; }
 }
 
-/* Black Friday call comparison and iPhone-inspired interface */
+/* Black Friday cinematic call experience */
 .bf-header-controls { display: flex; align-items: center; gap: clamp(14px, 2vw, 28px); }
-.bf-style-switcher { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,.12); border-radius: 30px; background: rgba(255,255,255,.035); padding: 6px 10px; color: #61685e; }
-.bf-style-switcher span { color: #4c5249; font-size: 9px; }
-.bf-style-switcher button { min-height: 25px; border: 0; background: transparent; padding: 0 3px; color: #8b9287; font: inherit; font-size: 8px; font-weight: 800; letter-spacing: .12em; cursor: pointer; transition: color .18s ease; }
-.bf-style-switcher button[aria-pressed="true"] { color: var(--bf-green); }
-.bf-style-switcher button:hover { color: white; }
 .bf-audio-toggle-compact { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; padding: 0; }
 .bf-answer-zone > .bf-audio-toggle { margin: 14px 0 0 8px; }
 .bf-answer-zone > .bf-answer-link { margin-top: 10px; }
@@ -419,62 +414,14 @@ body {
 .bf-ended-screen .bf-eyebrow { color: #a3a69f; }
 .bf-ended-copy { margin: 0; color: #838980; font-size: 13px; letter-spacing: .06em; }
 
-.bf-phone-mode { overflow-x: hidden; overflow-y: auto; padding: 0; background: radial-gradient(ellipse at 48% 12%, rgba(76,79,93,.28), transparent 40%), radial-gradient(ellipse at 85% 83%, rgba(27,42,36,.3), transparent 46%), linear-gradient(160deg,#131419 0%,#090a0d 48%,#050707 100%); }
-.bf-phone-mode .bf-atmosphere { background: radial-gradient(ellipse at 48% 12%, rgba(76,79,93,.16), transparent 42%), radial-gradient(ellipse at 85% 83%, rgba(27,42,36,.16), transparent 46%); }
-.bf-iphone-screen { position: relative; z-index: 1; display: flex; width: min(100%,520px); min-height: 100svh; flex: 1; flex-direction: column; justify-content: space-between; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 20px) 28px calc(env(safe-area-inset-bottom) + 28px); animation: bf-fade-up .35s ease both; }
-.bf-iphone-topline { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 10px; }
-.bf-style-switcher-phone { border-color: rgba(255,255,255,.14); background: rgba(255,255,255,.06); }
-.bf-iphone-contact { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 28px 0 32px; text-align: center; }
-.bf-iphone-kicker { margin: 0 0 20px; color: #adb2b9; font-size: 10px; font-weight: 700; letter-spacing: .2em; }
-.bf-iphone-avatar { position: relative; display: grid; width: 112px; height: 112px; place-items: center; overflow: hidden; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; background: radial-gradient(circle at 45% 28%,#59606b 0%,#343840 40%,#202329 100%); color: #e1e4e6; box-shadow: 0 18px 60px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.12); }
-.bf-iphone-avatar::before { position: absolute; inset: -20%; border-radius: inherit; background: radial-gradient(circle,rgba(255,255,255,.14),transparent 65%); content: ""; }
-.bf-iphone-avatar svg { position: relative; z-index: 1; }
-.bf-iphone-contact h1 { margin: 22px 0 5px; color: #f4f5f6; font-size: clamp(30px,8vw,38px); font-weight: 500; letter-spacing: -.035em; }
-.bf-iphone-number { margin: 0; color: #a0a5ad; font-size: 14px; letter-spacing: .03em; }
-.bf-iphone-actions { display: flex; align-items: center; justify-content: center; gap: clamp(66px,22vw,104px); padding-top: 10px; }
-.bf-iphone-action { display: flex; min-width: 74px; flex-direction: column; align-items: center; gap: 10px; border: 0; background: transparent; color: #c6c9ce; font: inherit; cursor: pointer; }
-.bf-iphone-action span { display: grid; width: 72px; height: 72px; place-items: center; border-radius: 50%; color: white; box-shadow: 0 8px 30px rgba(0,0,0,.3); transition: transform .16s ease, filter .16s ease; }
-.bf-iphone-action:hover span, .bf-iphone-action:focus-visible span { transform: scale(1.06); filter: brightness(1.12); }
-.bf-iphone-action:active span { transform: scale(.96); }
-.bf-iphone-action small { font-size: 12px; }
-.bf-iphone-decline span { background: linear-gradient(145deg,#ff6258,#e83d36); }
-.bf-iphone-answer span { background: linear-gradient(145deg,#43d66a,#22b94b); }
-.bf-phone-rotated { transform: rotate(135deg); }
-.bf-iphone-skip { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 20px auto 0; border: 0; background: transparent; padding: 10px 12px; color: #858b93; font: inherit; font-size: 11px; cursor: pointer; transition: color .18s ease; }
-.bf-iphone-skip:hover { color: #f1f2f3; }
-.bf-iphone-contact-active .bf-iphone-avatar { width: 98px; height: 98px; }
-.bf-iphone-contact-active h1 { margin-top: 19px; }
-.bf-iphone-contact-active .bf-iphone-number { font-family: var(--font-geist-mono),monospace; font-size: 15px; letter-spacing: .08em; }
-.bf-iphone-avatar-active { border-color: rgba(255,255,255,.12); background: radial-gradient(circle at 45% 28%,#414650 0%,#292d33 45%,#1b1e22 100%); }
-.bf-iphone-message { max-width: 330px; min-height: 58px; margin: 26px 0 0; color: #f2f3f4; font-size: 15px; font-weight: 600; line-height: 1.5; letter-spacing: .075em; }
-.bf-iphone-active-controls { padding-top: 6px; text-align: center; }
-.bf-iphone-active-controls .bf-iphone-action { margin: 0 auto; }
-.bf-iphone-result { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 30px 0; text-align: center; animation: bf-fade-up .25s ease both; }
-.bf-iphone-avatar-muted { margin-bottom: 25px; color: #a5aab1; opacity: .8; }
-.bf-iphone-result .bf-iphone-kicker { margin-bottom: 12px; }
-.bf-iphone-result h1 { max-width: 320px; margin: 0; color: #f1f2f3; font-size: 27px; font-weight: 500; line-height: 1.25; }
-.bf-iphone-result .bf-iphone-number { margin-top: 4px; }
-.bf-iphone-reveal-button { display: inline-flex; min-height: 54px; align-items: center; justify-content: center; gap: 12px; margin-top: 28px; border: 1px solid rgba(85,232,20,.55); border-radius: 30px; background: rgba(85,232,20,.12); padding: 0 22px; color: #91f36d; font: inherit; font-size: 10px; font-weight: 800; letter-spacing: .12em; cursor: pointer; transition: background .18s ease, transform .18s ease; }
-.bf-iphone-reveal-button:hover { transform: translateY(-1px); background: rgba(85,232,20,.2); }
-.bf-iphone-wait { width: 5px; height: 5px; margin-top: 25px; border-radius: 50%; background: #a1a6ad; animation: bf-phone-breathe 1s ease infinite; }
-.bf-phone-mode button:focus-visible, .bf-phone-mode a:focus-visible { outline: 2px solid #e5e7ea; outline-offset: 4px; }
-
 @media (max-width: 760px) {
   .bf-header-controls { gap: 10px; }
   .bf-header-controls .bf-edition { gap: 6px; }
-  .bf-header-controls .bf-style-switcher { gap: 4px; padding: 4px 7px; }
-  .bf-header-controls .bf-style-switcher button { font-size: 7px; }
   .bf-answer-zone > .bf-audio-toggle { margin: 12px auto 0; }
   .bf-connected .bf-caption { max-width: 360px; margin-top: 20px; }
   .bf-call-controls { margin-top: 24px; }
-  .bf-iphone-screen { padding-right: 24px; padding-left: 24px; }
-  .bf-iphone-contact { padding-top: 18px; padding-bottom: 25px; }
 }
 @media (max-width: 370px) {
-  .bf-iphone-screen { padding-right: 18px; padding-left: 18px; }
-  .bf-iphone-avatar { width: 100px; height: 100px; }
-  .bf-iphone-actions { gap: 60px; }
-  .bf-iphone-action span { width: 66px; height: 66px; }
 }
 @media (max-width: 380px) {
   .bf-header { gap: 8px; }
@@ -482,8 +429,6 @@ body {
   .bf-header .bf-logo { width: 90px; }
   .bf-header-controls { flex: 0 0 auto; flex-direction: column; align-items: flex-end; gap: 3px; }
   .bf-header-controls .bf-edition { gap: 4px; font-size: 6px; letter-spacing: .08em; }
-  .bf-header-controls .bf-style-switcher { gap: 4px; padding: 3px 6px; }
-  .bf-header-controls .bf-style-switcher button { min-height: 19px; font-size: 6px; }
   .bf-call-title { font-size: clamp(43px,15vw,50px); }
 }
 
@@ -561,8 +506,8 @@ body {
 .bf-call-secondary-actions .bf-audio-toggle { min-height: 42px; margin: 0; }
 
 @media (max-width: 760px) {
-  .bf-public.bf-stage-incoming:not(.bf-phone-mode),
-  .bf-public.bf-stage-answering:not(.bf-phone-mode) {
+  .bf-public.bf-stage-incoming,
+  .bf-public.bf-stage-connected {
     min-height: 100vh;
     min-height: 100svh;
     min-height: 100dvh;
@@ -572,34 +517,25 @@ body {
     padding-bottom: max(9px, env(safe-area-inset-bottom));
   }
 
-  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-header,
-  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-header {
+  .bf-public.bf-stage-incoming .bf-header,
+  .bf-public.bf-stage-connected .bf-header {
     min-height: 43px;
     justify-content: center;
     padding-bottom: 0;
     border-bottom: 0;
   }
-  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-logo,
-  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-logo { width: clamp(104px, 29vw, 120px); }
-  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-header-controls,
-  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-header-controls {
+  .bf-public.bf-stage-incoming .bf-logo,
+  .bf-public.bf-stage-connected .bf-logo { width: clamp(104px, 29vw, 120px); }
+  .bf-public.bf-stage-incoming .bf-header-controls,
+  .bf-public.bf-stage-connected .bf-header-controls {
     position: absolute;
     top: 50%;
     right: 0;
     gap: 0;
     transform: translateY(-50%);
   }
-  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-edition,
-  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-edition { display: none; }
-  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-style-switcher,
-  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-style-switcher {
-    gap: 3px;
-    border-color: rgba(255,255,255,.09);
-    background: rgba(255,255,255,.025);
-    padding: 3px 6px;
-  }
-  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-style-switcher button,
-  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-style-switcher button { min-height: 22px; font-size: 7px; }
+  .bf-public.bf-stage-incoming .bf-edition,
+  .bf-public.bf-stage-connected .bf-edition { display: none; }
 
   .bf-call-screen {
     display: grid;
@@ -671,8 +607,8 @@ body {
   }
   .bf-call-secondary-actions .bf-audio-toggle svg { width: 14px; height: 14px; }
   .bf-call-secondary-actions .bf-audio-note { max-width: min(88vw, 320px); margin: 2px auto 0; font-size: 9px; line-height: 1.3; }
-  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-footer,
-  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-footer {
+  .bf-public.bf-stage-incoming .bf-footer,
+  .bf-public.bf-stage-connected .bf-footer {
     min-height: 23px;
     padding-top: 6px;
     font-size: 7px;

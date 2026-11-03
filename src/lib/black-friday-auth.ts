@@ -1,84 +1,56 @@
 import "server-only";
 
-import { getAdminEmails } from "@/lib/admin-auth";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { BlackFridayRole, BlackFridayStaff } from "@/lib/black-friday";
+import { queryNeon } from "@/lib/neon/database";
+import { getNeonAuth } from "@/lib/neon/auth-server";
+import type { BlackFridayStaff } from "@/lib/black-friday";
 
 type StaffRow = BlackFridayStaff & { auth_user_id: string | null };
 
-function bootstrapAdminEmails() {
-  return new Set(
-    [
-      ...getAdminEmails(),
-      ...(process.env.BLACK_FRIDAY_BOOTSTRAP_ADMIN_EMAIL ?? "").split(","),
-    ]
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
-
 export async function getCurrentBlackFridayStaff() {
-  const supabase = await createSupabaseServerClient();
-  const admin = createSupabaseAdminClient();
-  if (!supabase || !admin) return null;
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  const auth = getNeonAuth();
+  if (!auth) return null;
+  let session;
+  try {
+    const result = await auth.getSession();
+    session = result.data;
+  } catch {
+    return null;
+  }
+  const user = session?.user;
   const email = user?.email?.trim().toLowerCase();
-  if (userError || !user || !email) return null;
+  if (!user?.id || !user.emailVerified || !email) return null;
 
-  const { data, error } = await admin
-    .from("black_friday_staff")
-    .select("id,email,role,is_active,auth_user_id")
-    .eq("email", email)
-    .maybeSingle();
-
-  if (error) return null;
-
-  let staff = data as StaffRow | null;
-  if (!staff && bootstrapAdminEmails().has(email)) {
-    const { data: created, error: createError } = await admin
-      .from("black_friday_staff")
-      .upsert(
-        {
-          email,
-          auth_user_id: user.id,
-          role: "administrator" satisfies BlackFridayRole,
-          is_active: true,
-        },
-        { onConflict: "email" },
-      )
-      .select("id,email,role,is_active,auth_user_id")
-      .single();
-    if (createError || !created) return null;
-    staff = created as StaffRow;
+  const bootstrapEmail = process.env.BLACK_FRIDAY_BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase();
+  if (bootstrapEmail && email === bootstrapEmail) {
+    await queryNeon<StaffRow>(
+      `insert into public.black_friday_staff (email, auth_user_id, role, is_active)
+       values ($1, $2::uuid, 'administrator', true)
+       on conflict (email) do update set auth_user_id = coalesce(public.black_friday_staff.auth_user_id, excluded.auth_user_id)
+       returning id, email, role, is_active, auth_user_id`,
+      [email, user.id],
+    );
   }
 
-  if (!staff || !staff.is_active) return null;
-  if (staff.auth_user_id && staff.auth_user_id !== user.id) return null;
+  let [staff] = await queryNeon<StaffRow>(
+    `select id, email, role, is_active, auth_user_id from public.black_friday_staff where email = $1 limit 1`,
+    [email],
+  );
+  if (!staff || !staff.is_active || (staff.auth_user_id && staff.auth_user_id !== user.id)) return null;
 
   if (!staff.auth_user_id) {
-    const { data: linked, error: linkError } = await admin
-      .from("black_friday_staff")
-      .update({ auth_user_id: user.id })
-      .eq("id", staff.id)
-      .is("auth_user_id", null)
-      .select("id,email,role,is_active,auth_user_id")
-      .maybeSingle();
-
-    if (linkError) return null;
-    if (linked) staff = linked as StaffRow;
+    const [linked] = await queryNeon<StaffRow>(
+      `update public.black_friday_staff set auth_user_id = $2::uuid
+       where id = $1::uuid and auth_user_id is null
+       returning id, email, role, is_active, auth_user_id`,
+      [staff.id, user.id],
+    );
+    if (linked) staff = linked;
     else {
-      const { data: existing, error: existingError } = await admin
-        .from("black_friday_staff")
-        .select("id,email,role,is_active,auth_user_id")
-        .eq("id", staff.id)
-        .maybeSingle();
-      if (existingError || !existing || existing.auth_user_id !== user.id) return null;
-      staff = existing as StaffRow;
+      [staff] = await queryNeon<StaffRow>(
+        `select id, email, role, is_active, auth_user_id from public.black_friday_staff where id = $1::uuid limit 1`,
+        [staff.id],
+      );
+      if (!staff || staff.auth_user_id !== user.id) return null;
     }
   }
 

@@ -3,27 +3,7 @@
 import { useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { ArrowDownRight, ArrowRight, PhoneCall, Volume2, VolumeX } from "lucide-react";
 
-export type CallStyle = "original" | "iphone";
-export type CallPhase = "incoming" | "answering" | "glitch" | "connected" | "message" | "ended" | "declined";
-
-type SwitcherProps = {
-  style: CallStyle;
-  visible: boolean;
-  onChange: (style: CallStyle) => void;
-  className?: string;
-};
-
-export function CallStyleSwitcher({ style, visible, onChange, className = "" }: SwitcherProps) {
-  if (!visible) return null;
-
-  return (
-    <div className={`bf-style-switcher ${className}`} role="group" aria-label="Comparar estilos da chamada">
-      <button type="button" aria-pressed={style === "original"} onClick={() => onChange("original")}>ORIGINAL</button>
-      <span aria-hidden="true">|</span>
-      <button type="button" aria-pressed={style === "iphone"} onClick={() => onChange("iphone")}>IPHONE</button>
-    </div>
-  );
-}
+export type CallPhase = "incoming" | "connected" | "message" | "ended";
 
 type SoundToggleProps = {
   enabled: boolean;
@@ -54,10 +34,8 @@ type SharedCallProps = {
   soundPending?: boolean;
   onToggleSound: () => void;
   onAnswer: () => void;
-  onDecline: () => void;
   onEnd: () => void;
   onSkip: () => void;
-  declineReady: boolean;
 };
 
 function formattedTime(seconds: number) {
@@ -81,23 +59,6 @@ export function OriginalCallInterface({
   const pointerStart = useRef(0);
   const lastDrag = useRef(0);
   const dragGeneratedClick = useRef(false);
-
-  if (phase === "glitch") {
-    return (
-      <section className="bf-glitch-screen" role="status" aria-label="Interferência digital no sinal da chamada; revelando a campanha">
-        <div className="bf-glitch-orbits" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-        <div className="bf-glitch-signal" aria-hidden="true">
-          <i /><i /><i /><i /><i /><i /><i />
-        </div>
-        <p className="bf-glitch-name" data-text="DESCONHECIDO">DESCONHECIDO</p>
-        <div className="bf-glitch-scan" aria-hidden="true" />
-      </section>
-    );
-  }
 
   function onPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
     if (!sliderRef.current) return;
@@ -148,7 +109,7 @@ export function OriginalCallInterface({
     );
   }
 
-  if (phase === "incoming" || phase === "answering") {
+  if (phase === "incoming") {
     return (
       <section className="bf-call-screen" aria-labelledby="incoming-title">
         <div className="bf-call-copy">
@@ -177,7 +138,7 @@ export function OriginalCallInterface({
 
         <div className="bf-answer-zone">
           <div className="bf-slider" ref={sliderRef}>
-            <span className="bf-slider-progress" style={{ width: phase === "answering" ? "100%" : `${drag + 56}px` }} />
+            <span className="bf-slider-progress" style={{ width: `${drag + 56}px` }} />
             <span className="bf-slider-text" aria-hidden="true">DESLIZE PARA ATENDER</span>
             <button
               className="bf-slider-handle"
@@ -189,7 +150,7 @@ export function OriginalCallInterface({
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
-              style={{ left: phase === "answering" ? "calc(100% - 57px)" : `${drag + 4}px` }}
+              style={{ left: `${drag + 4}px` }}
             >
               <ArrowRight size={20} />
             </button>
@@ -224,7 +185,7 @@ export function OriginalCallInterface({
 
   return (
     <section className={`bf-connected bf-connected-${phase}`} aria-labelledby="connected-title">
-      <p className="bf-eyebrow"><span className="bf-eyebrow-line" /> CHAMADA CONECTADA</p>
+      <p className="bf-eyebrow"><span className="bf-eyebrow-line" /> {phase === "message" ? "MENSAGEM RECEBIDA" : "CHAMADA CONECTADA"}</p>
       <div className="bf-connected-mark" aria-hidden="true">
         <span className="bf-connected-ring bf-connected-ring-a" />
         <span className="bf-connected-ring bf-connected-ring-b" />
@@ -240,103 +201,6 @@ export function OriginalCallInterface({
         <button type="button" className="bf-end-text-button" onClick={onEnd}><PhoneCall size={16} /> Encerrar ligação</button>
         <button type="button" className="bf-skip-link" onClick={onSkip}>Pular <ArrowRight size={14} /></button>
       </div>
-    </section>
-  );
-}
-
-type IPhoneCallProps = SharedCallProps & {
-  style: CallStyle;
-  showStyleSwitcher: boolean;
-  onStyleChange: (style: CallStyle) => void;
-};
-
-export function IPhoneCallInterface({
-  phase,
-  elapsedSeconds,
-  soundEnabled,
-  onToggleSound,
-  onAnswer,
-  onDecline,
-  onEnd,
-  onSkip,
-  declineReady,
-  style,
-  showStyleSwitcher,
-  onStyleChange,
-}: IPhoneCallProps) {
-  const isIncoming = phase === "incoming";
-  const isDeclined = phase === "declined";
-  const isEnded = phase === "ended";
-  const isActive = phase === "connected" || phase === "message";
-
-  return (
-    <section className={`bf-iphone-screen bf-iphone-${phase}`} aria-label="Experiência de chamada no estilo iPhone">
-      <div className="bf-iphone-topline">
-        <CallStyleSwitcher style={style} visible={showStyleSwitcher} onChange={onStyleChange} className="bf-style-switcher-phone" />
-        <SoundToggle enabled={soundEnabled} onToggle={onToggleSound} compact />
-      </div>
-
-      {isIncoming && (
-        <>
-          <div className="bf-iphone-contact">
-            <p className="bf-iphone-kicker">CHAMADA RECEBIDA</p>
-            <div className="bf-iphone-avatar" aria-hidden="true"><PhoneCall size={34} strokeWidth={1.45} /></div>
-            <h1>Desconhecido</h1>
-            <p className="bf-iphone-number">Número desconhecido</p>
-          </div>
-          <div className="bf-iphone-actions">
-            <button type="button" className="bf-iphone-action bf-iphone-decline" onClick={onDecline}>
-              <span><PhoneCall size={27} className="bf-phone-rotated" /></span>
-              <small>Recusar</small>
-            </button>
-            <button type="button" className="bf-iphone-action bf-iphone-answer" onClick={onAnswer}>
-              <span><PhoneCall size={27} /></span>
-              <small>Atender</small>
-            </button>
-          </div>
-          <button type="button" className="bf-iphone-skip" onClick={onSkip}>Pular experiência <ArrowDownRight size={14} /></button>
-        </>
-      )}
-
-      {isActive && (
-        <>
-          <div className="bf-iphone-contact bf-iphone-contact-active">
-            <p className="bf-iphone-kicker">CHAMADA CONECTADA</p>
-            <div className="bf-iphone-avatar bf-iphone-avatar-active" aria-hidden="true"><PhoneCall size={32} strokeWidth={1.4} /></div>
-            <h1>Desconhecido</h1>
-            <p className="bf-iphone-number">{formattedTime(elapsedSeconds)}</p>
-            <p className="bf-iphone-message" aria-live="polite">
-              {phase === "message" ? "VOCÊ NÃO ESTAVA PREPARADO PARA ESSA LIGAÇÃO." : "A linha está segura."}
-            </p>
-          </div>
-          <div className="bf-iphone-active-controls">
-            <button type="button" className="bf-iphone-action bf-iphone-decline" onClick={onEnd} aria-label="Encerrar ligação">
-              <span><PhoneCall size={27} className="bf-phone-rotated" /></span>
-              <small>Encerrar</small>
-            </button>
-            <button type="button" className="bf-iphone-skip" onClick={onSkip}>Pular para a revelação <ArrowRight size={14} /></button>
-          </div>
-        </>
-      )}
-
-      {isDeclined && (
-        <div className="bf-iphone-result" aria-live="polite">
-          <div className="bf-iphone-avatar bf-iphone-avatar-muted" aria-hidden="true"><PhoneCall size={32} className="bf-phone-rotated" /></div>
-          <p className="bf-iphone-kicker">CHAMADA RECUSADA</p>
-          <h1>A novidade ainda espera por você.</h1>
-          {declineReady ? (
-            <button type="button" className="bf-iphone-reveal-button" onClick={onSkip}>DESCOBRIR A NOVIDADE <ArrowRight size={17} /></button>
-          ) : <span className="bf-iphone-wait" aria-hidden="true" />}
-        </div>
-      )}
-
-      {isEnded && (
-        <div className="bf-iphone-result" aria-live="polite">
-          <div className="bf-iphone-avatar bf-iphone-avatar-muted" aria-hidden="true"><PhoneCall size={32} className="bf-phone-rotated" /></div>
-          <p className="bf-iphone-kicker">CHAMADA ENCERRADA</p>
-          <p className="bf-iphone-number">A linha ficou em silêncio.</p>
-        </div>
-      )}
     </section>
   );
 }

@@ -7,12 +7,9 @@ import { ArrowRight, Check, CheckCircle2, Share2 } from "lucide-react";
 import { DIALFIT_LOGO } from "@/config/campaign";
 import { formatBrazilianPhone, normalizeBrazilianPhone } from "@/lib/black-friday";
 import {
-  CallStyleSwitcher,
   CampaignReveal,
-  IPhoneCallInterface,
   OriginalCallInterface,
   type CallPhase,
-  type CallStyle,
 } from "./CallExperience";
 
 type UTM = { source: string; medium: string; campaign: string };
@@ -23,17 +20,6 @@ function stopAudio(audio: HTMLAudioElement | null) {
   if (!audio) return;
   audio.pause();
   try { audio.currentTime = 0; } catch { /* Metadata may not have loaded yet. */ }
-}
-
-function playCallAsset(audioRef: { current: HTMLAudioElement | null }, enabledRef: { current: boolean }) {
-  const audio = audioRef.current;
-  if (!enabledRef.current || !audio) return;
-  try {
-    audio.currentTime = 0;
-    void audio.play().catch(() => undefined);
-  } catch {
-    // The glitch sound is optional; the visual transition always continues.
-  }
 }
 
 function playCallEffect(contextRef: { current: AudioContext | null }, enabledRef: { current: boolean }, effect: SoundEffect) {
@@ -78,20 +64,12 @@ function closeCallAudio(contextRef: { current: AudioContext | null }) {
   if (context && context.state !== "closed") void context.close().catch(() => undefined);
 }
 
-export function PublicExperience({
-  initialCallStyle = "original",
-  showStyleSwitcher = false,
-}: {
-  initialCallStyle?: CallStyle;
-  showStyleSwitcher?: boolean;
-}) {
+export function PublicExperience() {
   const [stage, setStage] = useState<Stage>("incoming");
-  const [callStyle, setCallStyle] = useState<CallStyle>(initialCallStyle);
   const [elapsed, setElapsed] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [soundBlocked, setSoundBlocked] = useState(false);
   const [soundPending, setSoundPending] = useState(false);
-  const [declineReady, setDeclineReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
@@ -111,7 +89,6 @@ export function PublicExperience({
   const callStartedAt = useRef(0);
   const audioContextRef = useRef<AudioContext | null>(null);
   const ringtoneRef = useRef<HTMLAudioElement | null>(null);
-  const glitchAudioRef = useRef<HTMLAudioElement | null>(null);
   const ringtoneAttemptRef = useRef(0);
   const soundPendingRef = useRef(false);
   const callAcceptedRef = useRef(false);
@@ -139,16 +116,10 @@ export function PublicExperience({
     ringtone.volume = 0.64;
     ringtoneRef.current = ringtone;
 
-    const glitch = new Audio("/audio/dialfit-signal-interference.wav");
-    glitch.preload = "auto";
-    glitch.volume = 0.7;
-    glitchAudioRef.current = glitch;
-
     const pauseAllSound = () => {
       ringtoneAttemptRef.current += 1;
       soundPendingRef.current = false;
       stopAudio(ringtoneRef.current);
-      stopAudio(glitchAudioRef.current);
       soundEnabledRef.current = false;
       setSoundEnabled(false);
       setSoundPending(false);
@@ -166,32 +137,15 @@ export function PublicExperience({
       document.removeEventListener("visibilitychange", pauseForBackground);
       window.removeEventListener("pagehide", pauseAllSound);
       stopAudio(ringtoneRef.current);
-      stopAudio(glitchAudioRef.current);
       ringtoneRef.current = null;
-      glitchAudioRef.current = null;
       closeCallAudio(audioContextRef);
     };
   }, []);
 
   useEffect(() => {
-    if (stage !== "answering") return;
-    const timeout = window.setTimeout(() => {
-      setStage("glitch");
-      playCallAsset(glitchAudioRef, soundEnabledRef);
-    }, reducedMotion ? 55 : 170);
-    return () => window.clearTimeout(timeout);
-  }, [stage, reducedMotion]);
-
-  useEffect(() => {
-    if (stage !== "glitch") return;
-    const timeout = window.setTimeout(() => setStage("reveal"), reducedMotion ? 220 : 1_160);
-    return () => window.clearTimeout(timeout);
-  }, [stage, reducedMotion]);
-
-  useEffect(() => {
-    if (callStyle !== "iphone" || (stage !== "connected" && stage !== "message")) return;
-    const messageAt = reducedMotion ? 220 : 450;
-    const endAt = reducedMotion ? 1450 : 2600;
+    if (stage !== "connected" && stage !== "message") return;
+    const messageAt = reducedMotion ? 180 : 520;
+    const endAt = reducedMotion ? 1_500 : 2_650;
     const interval = window.setInterval(() => {
       const elapsedMs = Math.max(0, Date.now() - callStartedAt.current);
       setElapsed(Math.floor(elapsedMs / 1000));
@@ -203,7 +157,7 @@ export function PublicExperience({
       }
     }, 100);
     return () => window.clearInterval(interval);
-  }, [callStyle, stage, reducedMotion]);
+  }, [stage, reducedMotion]);
 
   useEffect(() => {
     if (stage !== "ended") return;
@@ -212,20 +166,14 @@ export function PublicExperience({
   }, [stage, reducedMotion]);
 
   useEffect(() => {
-    if (stage !== "declined") return;
-    const timeout = window.setTimeout(() => setDeclineReady(true), 420);
-    return () => window.clearTimeout(timeout);
-  }, [stage]);
-
-  useEffect(() => {
-    if (stage !== "reveal" || callStyle !== "iphone") return;
+    if (stage !== "reveal") return;
     playCallEffect(audioContextRef, soundEnabledRef, "reveal");
     const timeout = window.setTimeout(() => closeCallAudio(audioContextRef), 800);
     return () => {
       window.clearTimeout(timeout);
       closeCallAudio(audioContextRef);
     };
-  }, [callStyle, stage]);
+  }, [stage]);
 
   useEffect(() => {
     if (stage === "form") {
@@ -238,24 +186,10 @@ export function PublicExperience({
     callAcceptedRef.current = true;
     stopIncomingRingtone();
     setSoundBlocked(false);
-    setDeclineReady(false);
-    if (callStyle === "original") {
-      setStage("answering");
-      return;
-    }
     callStartedAt.current = Date.now();
     setStage("connected");
     setElapsed(0);
     playCallEffect(audioContextRef, soundEnabledRef, "connected");
-  }
-
-  function declineCall() {
-    if (stage !== "incoming") return;
-    stopIncomingRingtone();
-    soundEnabledRef.current = false;
-    setSoundEnabled(false);
-    setDeclineReady(false);
-    setStage("declined");
   }
 
   function finishCall() {
@@ -267,7 +201,6 @@ export function PublicExperience({
 
   function skipToReveal() {
     stopIncomingRingtone();
-    stopAudio(glitchAudioRef.current);
     soundEnabledRef.current = false;
     setSoundEnabled(false);
     setSoundBlocked(false);
@@ -281,7 +214,6 @@ export function PublicExperience({
       setSoundEnabled(false);
       setSoundBlocked(false);
       stopIncomingRingtone();
-      stopAudio(glitchAudioRef.current);
       closeCallAudio(audioContextRef);
       return;
     }
@@ -326,19 +258,8 @@ export function PublicExperience({
     setSoundBlocked(false);
   }
 
-  function changeCallStyle(nextStyle: CallStyle) {
-    stopIncomingRingtone();
-    stopAudio(glitchAudioRef.current);
-    closeCallAudio(audioContextRef);
-    setCallStyle(nextStyle);
-    const nextUrl = new URL(window.location.href);
-    nextUrl.searchParams.set("callStyle", nextStyle);
-    window.location.assign(nextUrl.toString());
-  }
-
   function replayCall() {
     stopIncomingRingtone();
-    stopAudio(glitchAudioRef.current);
     soundEnabledRef.current = false;
     setSoundEnabled(false);
     setSoundBlocked(false);
@@ -404,59 +325,36 @@ export function PublicExperience({
     }
   }
 
-  const isCallStage = stage === "incoming" || stage === "answering" || stage === "glitch" || stage === "connected" || stage === "message" || stage === "ended" || stage === "declined";
-  const callPhase = isCallStage ? stage as CallPhase : null;
-  const phoneFullScreen = callStyle === "iphone" && isCallStage;
+  const callPhase = (["incoming", "connected", "message", "ended"] as CallPhase[]).includes(stage as CallPhase)
+    ? stage as CallPhase
+    : null;
 
   return (
-    <main className={`bf-public bf-stage-${stage}${phoneFullScreen ? " bf-phone-mode" : ""}`}>
+    <main className={`bf-public bf-stage-${stage}`}>
       <div className="bf-atmosphere" aria-hidden="true" />
       <div className="bf-grain" aria-hidden="true" />
 
-      {!phoneFullScreen && (
-        <header className="bf-header">
-          <Link href="/" aria-label="Dial Fit, início">
-            <Image src={DIALFIT_LOGO} alt="Dial Fit Academia" width={2048} height={696} priority className="bf-logo" />
-          </Link>
-          <div className="bf-header-controls">
-            <div className="bf-edition"><span className="bf-live-dot" /> BLACK EDITION <span>·</span> 2026</div>
-            {isCallStage ? <CallStyleSwitcher style={callStyle} visible={showStyleSwitcher} onChange={changeCallStyle} /> : null}
-          </div>
-        </header>
-      )}
+      <header className="bf-header">
+        <Link href="/" aria-label="Dial Fit, início">
+          <Image src={DIALFIT_LOGO} alt="Dial Fit Academia" width={2048} height={696} priority className="bf-logo" />
+        </Link>
+        <div className="bf-header-controls">
+          <div className="bf-edition"><span className="bf-live-dot" /> BLACK EDITION <span>·</span> 2026</div>
+        </div>
+      </header>
 
       {callPhase && (
-        callStyle === "iphone" ? (
-          <IPhoneCallInterface
-            phase={callPhase}
-            elapsedSeconds={elapsed}
-            soundEnabled={soundEnabled}
-            soundBlocked={soundBlocked}
-            onToggleSound={toggleSound}
-            onAnswer={answerCall}
-            onDecline={declineCall}
-            onEnd={finishCall}
-            onSkip={skipToReveal}
-            declineReady={declineReady}
-            style={callStyle}
-            showStyleSwitcher={showStyleSwitcher}
-            onStyleChange={changeCallStyle}
-          />
-        ) : (
-          <OriginalCallInterface
-            phase={callPhase}
-            elapsedSeconds={elapsed}
-            soundEnabled={soundEnabled}
-            soundBlocked={soundBlocked}
-            soundPending={soundPending}
-            onToggleSound={toggleSound}
-            onAnswer={answerCall}
-            onDecline={declineCall}
-            onEnd={finishCall}
-            onSkip={skipToReveal}
-            declineReady={declineReady}
-          />
-        )
+        <OriginalCallInterface
+          phase={callPhase}
+          elapsedSeconds={elapsed}
+          soundEnabled={soundEnabled}
+          soundBlocked={soundBlocked}
+          soundPending={soundPending}
+          onToggleSound={toggleSound}
+          onAnswer={answerCall}
+          onEnd={finishCall}
+          onSkip={skipToReveal}
+        />
       )}
 
       {stage === "reveal" && <CampaignReveal onContinue={() => setStage("form")} onReplay={replayCall} />}
@@ -520,13 +418,11 @@ export function PublicExperience({
         </section>
       )}
 
-      {!phoneFullScreen && (
-        <footer className="bf-footer">
-          <span>© {new Date().getFullYear()} DIAL FIT</span>
-          <Link href="/privacidade">PRIVACIDADE</Link>
-          <span className="bf-footer-signal"><span /> LINHA SEGURA</span>
-        </footer>
-      )}
+      <footer className="bf-footer">
+        <span>© {new Date().getFullYear()} DIAL FIT</span>
+        <Link href="/privacidade">PRIVACIDADE</Link>
+        <span className="bf-footer-signal"><span /> LINHA SEGURA</span>
+      </footer>
     </main>
   );
 }
