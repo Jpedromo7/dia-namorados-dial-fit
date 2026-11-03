@@ -93,6 +93,7 @@ export function PublicExperience() {
   const soundPendingRef = useRef(false);
   const callAcceptedRef = useRef(false);
   const soundEnabledRef = useRef(false);
+  const soundManuallyDisabledRef = useRef(false);
 
   function stopIncomingRingtone() {
     ringtoneAttemptRef.current += 1;
@@ -168,6 +169,75 @@ export function PublicExperience() {
   }, []);
 
   useEffect(() => {
+    if (stage !== "incoming") return;
+    let listening = true;
+
+    const removeListeners = () => {
+      window.removeEventListener("pointerdown", unlockFromGesture, true);
+      window.removeEventListener("keydown", unlockFromGesture, true);
+    };
+
+    const unlockFromGesture = (event: PointerEvent | KeyboardEvent) => {
+      if (!listening || !event.isTrusted || callAcceptedRef.current || document.hidden) return;
+      const target = event.target;
+      if (target instanceof Element && target.closest(".bf-audio-toggle")) return;
+
+      listening = false;
+      removeListeners();
+      if (soundManuallyDisabledRef.current) return;
+      if (soundEnabledRef.current || soundPendingRef.current) return;
+
+      const ringtone = ringtoneRef.current;
+      if (!ringtone) return;
+
+      const attempt = ++ringtoneAttemptRef.current;
+      soundPendingRef.current = true;
+      soundEnabledRef.current = true;
+      setSoundPending(true);
+      setSoundEnabled(true);
+      setSoundBlocked(false);
+
+      const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (AudioContextClass) {
+        try {
+          const context = audioContextRef.current ?? new AudioContextClass();
+          audioContextRef.current = context;
+          if (context.state === "suspended") void context.resume().catch(() => undefined);
+        } catch {
+          // Audio remains optional; the visible call flow does not depend on it.
+        }
+      }
+
+      void ringtone.play().then(() => {
+        if (attempt !== ringtoneAttemptRef.current || callAcceptedRef.current || document.hidden) {
+          stopAudio(ringtone);
+          return;
+        }
+        soundEnabledRef.current = true;
+        setSoundEnabled(true);
+      }).catch(() => {
+        if (attempt === ringtoneAttemptRef.current) {
+          soundEnabledRef.current = false;
+          setSoundEnabled(false);
+          setSoundBlocked(true);
+        }
+      }).finally(() => {
+        if (attempt === ringtoneAttemptRef.current) {
+          soundPendingRef.current = false;
+          setSoundPending(false);
+        }
+      });
+    };
+
+    window.addEventListener("pointerdown", unlockFromGesture, true);
+    window.addEventListener("keydown", unlockFromGesture, true);
+    return () => {
+      listening = false;
+      removeListeners();
+    };
+  }, [stage]);
+
+  useEffect(() => {
     if (stage !== "connected" && stage !== "message") return;
     const messageAt = reducedMotion ? 180 : 520;
     const endAt = reducedMotion ? 1_500 : 2_650;
@@ -235,6 +305,7 @@ export function PublicExperience() {
 
   async function toggleSound() {
     if (soundEnabledRef.current) {
+      soundManuallyDisabledRef.current = true;
       soundEnabledRef.current = false;
       setSoundEnabled(false);
       setSoundBlocked(false);
@@ -243,6 +314,7 @@ export function PublicExperience() {
       return;
     }
 
+    soundManuallyDisabledRef.current = false;
     if (stage === "incoming") {
       if (soundPendingRef.current) return;
       const ringtone = ringtoneRef.current;

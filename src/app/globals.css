@@ -609,6 +609,7 @@ body {
     white-space: nowrap;
   }
   .bf-call-secondary-actions .bf-audio-toggle svg { width: 14px; height: 14px; }
+  .bf-call-secondary-actions .bf-audio-toggle[aria-pressed="false"] { border: 1px solid rgba(85,232,20,.38); border-radius: 22px; background: rgba(85,232,20,.08); padding-inline: 9px; color: #c5f3b7; font-size: 9px; }
   .bf-call-secondary-actions .bf-audio-note { grid-column: 1 / -1; grid-row: 2; width: min(88vw, 320px); max-width: 100%; margin: 0 auto; font-size: 9px; line-height: 1.3; }
   .bf-public.bf-stage-incoming .bf-footer,
   .bf-public.bf-stage-connected .bf-footer {
