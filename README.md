@@ -31,7 +31,7 @@ CRON_SECRET=
 
 `ADMIN_EMAILS` e `BLACK_FRIDAY_BOOTSTRAP_ADMIN_EMAIL` só inicializam a primeira conta administradora no backend. Depois da migração, novos acessos são controlados pelo painel da equipe. Configure no Supabase Auth o login Google e os endereços de retorno da Vercel Preview.
 
-Configure a razão social aprovada e um canal oficial em `NEXT_PUBLIC_DATA_CONTROLLER_NAME`, `NEXT_PUBLIC_PRIVACY_CONTACT_EMAIL` ou `NEXT_PUBLIC_PRIVACY_CONTACT_WHATSAPP` antes de divulgar a campanha. A experiência de chamada não utiliza narração nem arquivos de áudio; efeitos curtos são sintetizados no navegador, podem ser silenciados e não são necessários para compreender a campanha.
+Configure a razão social aprovada e um canal oficial em `NEXT_PUBLIC_DATA_CONTROLLER_NAME`, `NEXT_PUBLIC_PRIVACY_CONTACT_EMAIL` ou `NEXT_PUBLIC_PRIVACY_CONTACT_WHATSAPP` antes de divulgar a campanha. A experiência não utiliza narração. O toque original e a interferência digital ficam em `public/audio/` e podem ser recriados, sem dependências adicionais, por `python scripts/generate_call_audio.py`. O toque só começa após o visitante ativá-lo; a chamada continua normalmente sem áudio, e o som para ao atender, silenciar, trocar de aba ou sair da página.
 
 Na prévia e durante o desenvolvimento, compare a chamada cinematográfica e a interface inspirada no iPhone com `?callStyle=original` e `?callStyle=iphone`. Sem o parâmetro, a experiência cinematográfica é usada. O seletor de comparação fica oculto em produção.
 

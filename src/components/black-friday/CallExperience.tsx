@@ -4,7 +4,7 @@ import { useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent
 import { ArrowDownRight, ArrowRight, PhoneCall, Volume2, VolumeX } from "lucide-react";
 
 export type CallStyle = "original" | "iphone";
-export type CallPhase = "incoming" | "connected" | "message" | "ended" | "declined";
+export type CallPhase = "incoming" | "answering" | "glitch" | "connected" | "message" | "ended" | "declined";
 
 type SwitcherProps = {
   style: CallStyle;
@@ -50,6 +50,8 @@ type SharedCallProps = {
   phase: CallPhase;
   elapsedSeconds: number;
   soundEnabled: boolean;
+  soundBlocked: boolean;
+  soundPending?: boolean;
   onToggleSound: () => void;
   onAnswer: () => void;
   onDecline: () => void;
@@ -66,6 +68,8 @@ export function OriginalCallInterface({
   phase,
   elapsedSeconds,
   soundEnabled,
+  soundBlocked,
+  soundPending = false,
   onToggleSound,
   onAnswer,
   onEnd,
@@ -77,6 +81,23 @@ export function OriginalCallInterface({
   const pointerStart = useRef(0);
   const lastDrag = useRef(0);
   const dragGeneratedClick = useRef(false);
+
+  if (phase === "glitch") {
+    return (
+      <section className="bf-glitch-screen" role="status" aria-label="Interferência digital no sinal da chamada; revelando a campanha">
+        <div className="bf-glitch-orbits" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className="bf-glitch-signal" aria-hidden="true">
+          <i /><i /><i /><i /><i /><i /><i />
+        </div>
+        <p className="bf-glitch-name" data-text="DESCONHECIDO">DESCONHECIDO</p>
+        <div className="bf-glitch-scan" aria-hidden="true" />
+      </section>
+    );
+  }
 
   function onPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
     if (!sliderRef.current) return;
@@ -127,7 +148,7 @@ export function OriginalCallInterface({
     );
   }
 
-  if (phase === "incoming") {
+  if (phase === "incoming" || phase === "answering") {
     return (
       <section className="bf-call-screen" aria-labelledby="incoming-title">
         <div className="bf-call-copy">
@@ -153,27 +174,42 @@ export function OriginalCallInterface({
         <div className="bf-answer-zone">
           <p className="bf-answer-label">DESLIZE PARA ATENDER <ArrowRight size={14} /></p>
           <div className="bf-slider" ref={sliderRef}>
-            <span className="bf-slider-progress" style={{ width: `${drag + 56}px` }} />
+            <span className="bf-slider-progress" style={{ width: phase === "answering" ? "100%" : `${drag + 56}px` }} />
             <span className="bf-slider-text" aria-hidden="true">DESLIZE PARA ATENDER</span>
             <button
               className="bf-slider-handle"
               type="button"
               aria-label="Deslizar ou tocar para atender a ligação"
+              disabled={phase !== "incoming"}
               onClick={onSliderClick}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
-              style={{ transform: `translateX(${drag}px)` }}
+              style={{ left: phase === "answering" ? "calc(100% - 57px)" : `${drag + 4}px` }}
             >
               <ArrowRight size={20} />
             </button>
           </div>
-          <button className="bf-text-button bf-answer-link" type="button" onClick={onAnswer}>Ou toque aqui para atender</button>
-          <SoundToggle enabled={soundEnabled} onToggle={onToggleSound} />
+          <button className="bf-text-button bf-answer-link" type="button" onClick={onAnswer} disabled={phase !== "incoming"}>Ou toque aqui para atender</button>
+          <div className="bf-incoming-audio">
+            <button
+              className="bf-audio-toggle"
+              type="button"
+              onClick={onToggleSound}
+              aria-label={soundEnabled ? "Silenciar toque da chamada" : "Ativar som da chamada"}
+              aria-pressed={soundEnabled}
+              aria-busy={soundPending}
+              disabled={phase !== "incoming" || soundPending}
+            >
+              {soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
+              {soundPending ? "Ativando toque…" : soundEnabled ? "Silenciar toque" : "Ativar som da chamada"}
+            </button>
+            {soundBlocked ? <p className="bf-audio-note" role="status">O navegador não liberou o áudio. Você pode atender em silêncio.</p> : null}
+          </div>
         </div>
 
-        <button className="bf-skip-link" type="button" onClick={onSkip}>Pular experiência <ArrowDownRight size={14} /></button>
+        <button className="bf-skip-link" type="button" onClick={onSkip} disabled={phase !== "incoming"}>Pular experiência <ArrowDownRight size={14} /></button>
       </section>
     );
   }

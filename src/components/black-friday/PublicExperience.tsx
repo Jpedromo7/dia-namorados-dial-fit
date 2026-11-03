@@ -19,6 +19,23 @@ type UTM = { source: string; medium: string; campaign: string };
 type Stage = CallPhase | "reveal" | "form" | "success";
 type SoundEffect = "connected" | "ended" | "reveal";
 
+function stopAudio(audio: HTMLAudioElement | null) {
+  if (!audio) return;
+  audio.pause();
+  try { audio.currentTime = 0; } catch { /* Metadata may not have loaded yet. */ }
+}
+
+function playCallAsset(audioRef: { current: HTMLAudioElement | null }, enabledRef: { current: boolean }) {
+  const audio = audioRef.current;
+  if (!enabledRef.current || !audio) return;
+  try {
+    audio.currentTime = 0;
+    void audio.play().catch(() => undefined);
+  } catch {
+    // The glitch sound is optional; the visual transition always continues.
+  }
+}
+
 function playCallEffect(contextRef: { current: AudioContext | null }, enabledRef: { current: boolean }, effect: SoundEffect) {
   if (!enabledRef.current) return;
   const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -71,7 +88,9 @@ export function PublicExperience({
   const [stage, setStage] = useState<Stage>("incoming");
   const [callStyle, setCallStyle] = useState<CallStyle>(initialCallStyle);
   const [elapsed, setElapsed] = useState(0);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [soundBlocked, setSoundBlocked] = useState(false);
+  const [soundPending, setSoundPending] = useState(false);
   const [declineReady, setDeclineReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [phone, setPhone] = useState("");
@@ -91,7 +110,19 @@ export function PublicExperience({
   const [startedAt] = useState(() => Date.now());
   const callStartedAt = useRef(0);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const soundEnabledRef = useRef(true);
+  const ringtoneRef = useRef<HTMLAudioElement | null>(null);
+  const glitchAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ringtoneAttemptRef = useRef(0);
+  const soundPendingRef = useRef(false);
+  const callAcceptedRef = useRef(false);
+  const soundEnabledRef = useRef(false);
+
+  function stopIncomingRingtone() {
+    ringtoneAttemptRef.current += 1;
+    soundPendingRef.current = false;
+    setSoundPending(false);
+    stopAudio(ringtoneRef.current);
+  }
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -101,10 +132,64 @@ export function PublicExperience({
     return () => mediaQuery.removeEventListener("change", updatePreference);
   }, []);
 
-  useEffect(() => () => closeCallAudio(audioContextRef), []);
+  useEffect(() => {
+    const ringtone = new Audio("/audio/dialfit-incoming-ringtone.wav");
+    ringtone.preload = "auto";
+    ringtone.loop = true;
+    ringtone.volume = 0.72;
+    ringtoneRef.current = ringtone;
+
+    const glitch = new Audio("/audio/dialfit-signal-interference.wav");
+    glitch.preload = "auto";
+    glitch.volume = 0.7;
+    glitchAudioRef.current = glitch;
+
+    const pauseAllSound = () => {
+      ringtoneAttemptRef.current += 1;
+      soundPendingRef.current = false;
+      stopAudio(ringtoneRef.current);
+      stopAudio(glitchAudioRef.current);
+      soundEnabledRef.current = false;
+      setSoundEnabled(false);
+      setSoundPending(false);
+      setSoundBlocked(false);
+      closeCallAudio(audioContextRef);
+    };
+
+    const pauseForBackground = () => {
+      if (document.hidden) pauseAllSound();
+    };
+
+    document.addEventListener("visibilitychange", pauseForBackground);
+    window.addEventListener("pagehide", pauseAllSound);
+    return () => {
+      document.removeEventListener("visibilitychange", pauseForBackground);
+      window.removeEventListener("pagehide", pauseAllSound);
+      stopAudio(ringtoneRef.current);
+      stopAudio(glitchAudioRef.current);
+      ringtoneRef.current = null;
+      glitchAudioRef.current = null;
+      closeCallAudio(audioContextRef);
+    };
+  }, []);
 
   useEffect(() => {
-    if (stage !== "connected" && stage !== "message") return;
+    if (stage !== "answering") return;
+    const timeout = window.setTimeout(() => {
+      setStage("glitch");
+      playCallAsset(glitchAudioRef, soundEnabledRef);
+    }, reducedMotion ? 55 : 170);
+    return () => window.clearTimeout(timeout);
+  }, [stage, reducedMotion]);
+
+  useEffect(() => {
+    if (stage !== "glitch") return;
+    const timeout = window.setTimeout(() => setStage("reveal"), reducedMotion ? 220 : 1_160);
+    return () => window.clearTimeout(timeout);
+  }, [stage, reducedMotion]);
+
+  useEffect(() => {
+    if (callStyle !== "iphone" || (stage !== "connected" && stage !== "message")) return;
     const messageAt = reducedMotion ? 220 : 450;
     const endAt = reducedMotion ? 1450 : 2600;
     const interval = window.setInterval(() => {
@@ -118,7 +203,7 @@ export function PublicExperience({
       }
     }, 100);
     return () => window.clearInterval(interval);
-  }, [stage, reducedMotion]);
+  }, [callStyle, stage, reducedMotion]);
 
   useEffect(() => {
     if (stage !== "ended") return;
@@ -133,14 +218,14 @@ export function PublicExperience({
   }, [stage]);
 
   useEffect(() => {
-    if (stage !== "reveal") return;
+    if (stage !== "reveal" || callStyle !== "iphone") return;
     playCallEffect(audioContextRef, soundEnabledRef, "reveal");
     const timeout = window.setTimeout(() => closeCallAudio(audioContextRef), 800);
     return () => {
       window.clearTimeout(timeout);
       closeCallAudio(audioContextRef);
     };
-  }, [stage]);
+  }, [callStyle, stage]);
 
   useEffect(() => {
     if (stage === "form") {
@@ -149,42 +234,116 @@ export function PublicExperience({
   }, [stage]);
 
   function answerCall() {
-    if (stage !== "incoming") return;
+    if (stage !== "incoming" || callAcceptedRef.current) return;
+    callAcceptedRef.current = true;
+    stopIncomingRingtone();
+    setSoundBlocked(false);
+    setDeclineReady(false);
+    if (callStyle === "original") {
+      setStage("answering");
+      return;
+    }
     callStartedAt.current = Date.now();
     setStage("connected");
     setElapsed(0);
-    setDeclineReady(false);
     playCallEffect(audioContextRef, soundEnabledRef, "connected");
   }
 
   function declineCall() {
+    if (stage !== "incoming") return;
+    stopIncomingRingtone();
+    soundEnabledRef.current = false;
+    setSoundEnabled(false);
     setDeclineReady(false);
     setStage("declined");
   }
 
   function finishCall() {
     if (stage !== "connected" && stage !== "message") return;
+    stopIncomingRingtone();
     setStage("ended");
     playCallEffect(audioContextRef, soundEnabledRef, "ended");
   }
 
   function skipToReveal() {
+    stopIncomingRingtone();
+    stopAudio(glitchAudioRef.current);
+    soundEnabledRef.current = false;
+    setSoundEnabled(false);
+    setSoundBlocked(false);
     closeCallAudio(audioContextRef);
     setStage("reveal");
   }
 
-  function toggleSound() {
-    const next = !soundEnabledRef.current;
-    soundEnabledRef.current = next;
-    setSoundEnabled(next);
-    if (!next) closeCallAudio(audioContextRef);
+  async function toggleSound() {
+    if (soundEnabledRef.current) {
+      soundEnabledRef.current = false;
+      setSoundEnabled(false);
+      setSoundBlocked(false);
+      stopIncomingRingtone();
+      stopAudio(glitchAudioRef.current);
+      closeCallAudio(audioContextRef);
+      return;
+    }
+
+    if (callStyle === "original" && stage === "incoming") {
+      if (soundPendingRef.current) return;
+      const ringtone = ringtoneRef.current;
+      if (!ringtone) {
+        setSoundBlocked(true);
+        return;
+      }
+
+      const attempt = ++ringtoneAttemptRef.current;
+      soundPendingRef.current = true;
+      setSoundPending(true);
+      setSoundBlocked(false);
+      try {
+        await ringtone.play();
+        if (attempt !== ringtoneAttemptRef.current || stage !== "incoming" || document.hidden) {
+          stopAudio(ringtone);
+          return;
+        }
+        soundEnabledRef.current = true;
+        setSoundEnabled(true);
+      } catch {
+        if (attempt === ringtoneAttemptRef.current) {
+          soundEnabledRef.current = false;
+          setSoundEnabled(false);
+          setSoundBlocked(true);
+        }
+      } finally {
+        if (attempt === ringtoneAttemptRef.current) {
+          soundPendingRef.current = false;
+          setSoundPending(false);
+        }
+      }
+      return;
+    }
+
+    soundEnabledRef.current = true;
+    setSoundEnabled(true);
+    setSoundBlocked(false);
   }
 
   function changeCallStyle(nextStyle: CallStyle) {
+    stopIncomingRingtone();
+    stopAudio(glitchAudioRef.current);
+    closeCallAudio(audioContextRef);
     setCallStyle(nextStyle);
     const nextUrl = new URL(window.location.href);
     nextUrl.searchParams.set("callStyle", nextStyle);
     window.location.assign(nextUrl.toString());
+  }
+
+  function replayCall() {
+    stopIncomingRingtone();
+    stopAudio(glitchAudioRef.current);
+    soundEnabledRef.current = false;
+    setSoundEnabled(false);
+    setSoundBlocked(false);
+    callAcceptedRef.current = false;
+    setStage("incoming");
   }
 
   async function submitLead(event: FormEvent<HTMLFormElement>) {
@@ -245,7 +404,7 @@ export function PublicExperience({
     }
   }
 
-  const isCallStage = stage === "incoming" || stage === "connected" || stage === "message" || stage === "ended" || stage === "declined";
+  const isCallStage = stage === "incoming" || stage === "answering" || stage === "glitch" || stage === "connected" || stage === "message" || stage === "ended" || stage === "declined";
   const callPhase = isCallStage ? stage as CallPhase : null;
   const phoneFullScreen = callStyle === "iphone" && isCallStage;
 
@@ -272,6 +431,7 @@ export function PublicExperience({
             phase={callPhase}
             elapsedSeconds={elapsed}
             soundEnabled={soundEnabled}
+            soundBlocked={soundBlocked}
             onToggleSound={toggleSound}
             onAnswer={answerCall}
             onDecline={declineCall}
@@ -287,6 +447,8 @@ export function PublicExperience({
             phase={callPhase}
             elapsedSeconds={elapsed}
             soundEnabled={soundEnabled}
+            soundBlocked={soundBlocked}
+            soundPending={soundPending}
             onToggleSound={toggleSound}
             onAnswer={answerCall}
             onDecline={declineCall}
@@ -297,7 +459,7 @@ export function PublicExperience({
         )
       )}
 
-      {stage === "reveal" && <CampaignReveal onContinue={() => setStage("form")} onReplay={() => setStage("incoming")} />}
+      {stage === "reveal" && <CampaignReveal onContinue={() => setStage("form")} onReplay={replayCall} />}
 
       {stage === "form" && (
         <section className="bf-form-screen" aria-labelledby="form-title">
