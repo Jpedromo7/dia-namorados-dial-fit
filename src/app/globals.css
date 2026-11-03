@@ -209,6 +209,8 @@ body {
   text-transform: uppercase;
 }
 .bf-call-title span, .bf-form-story h1 span, .bf-success h1 span { color: transparent; -webkit-text-stroke: 1px rgba(245,246,243,.68); }
+.bf-call-title > span { display: block; white-space: nowrap; }
+.bf-call-title > span:first-child { color: var(--bf-white); -webkit-text-stroke: 0; }
 .bf-call-subtitle { margin: 24px 0 0; color: #adb1a8; font-size: 15px; line-height: 1.65; }
 .bf-call-object { position: relative; display: grid; grid-column: 2; grid-row: 1; width: min(100%, 500px); aspect-ratio: 1; place-items: center; justify-self: center; }
 .bf-call-object::before { position: absolute; width: 55%; height: 55%; border-radius: 50%; background: rgba(69,181,28,.09); content: ""; filter: blur(50px); }
@@ -543,4 +545,150 @@ body {
   .bf-glitch-screen { animation: bf-glitch-reduced-fade 180ms ease both !important; }
   .bf-glitch-screen::before, .bf-glitch-orbits, .bf-glitch-signal i, .bf-glitch-name, .bf-glitch-name::before, .bf-glitch-name::after, .bf-glitch-scan, .bf-stage-glitch .bf-header { animation: none !important; }
   .bf-glitch-name::before, .bf-glitch-name::after { display: none; }
+}
+
+/* Compact incoming-call composition, tuned for dynamic mobile viewport heights. */
+.bf-call-secondary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+.bf-call-secondary-actions > .bf-text-button,
+.bf-call-secondary-actions > .bf-skip-link { min-height: 42px; justify-content: center; }
+.bf-call-secondary-actions .bf-incoming-audio { display: flex; flex-direction: column; align-items: center; margin: 0; }
+.bf-call-secondary-actions .bf-audio-toggle { min-height: 42px; margin: 0; }
+
+@media (max-width: 760px) {
+  .bf-public.bf-stage-incoming:not(.bf-phone-mode),
+  .bf-public.bf-stage-answering:not(.bf-phone-mode) {
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: max(9px, env(safe-area-inset-bottom));
+  }
+
+  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-header,
+  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-header {
+    min-height: 43px;
+    justify-content: center;
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-logo,
+  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-logo { width: clamp(104px, 29vw, 120px); }
+  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-header-controls,
+  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-header-controls {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    gap: 0;
+    transform: translateY(-50%);
+  }
+  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-edition,
+  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-edition { display: none; }
+  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-style-switcher,
+  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-style-switcher {
+    gap: 3px;
+    border-color: rgba(255,255,255,.09);
+    background: rgba(255,255,255,.025);
+    padding: 3px 6px;
+  }
+  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-style-switcher button,
+  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-style-switcher button { min-height: 22px; font-size: 7px; }
+
+  .bf-call-screen {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    align-content: start;
+    min-height: 0;
+    row-gap: clamp(12px, 2.3dvh, 18px);
+    padding: clamp(7px, 1.4dvh, 12px) 0 0;
+  }
+  .bf-call-copy { grid-column: 1; grid-row: 1; align-self: center; padding: 0; text-align: center; }
+  .bf-call-copy .bf-eyebrow { justify-content: center; margin: 0 auto 6px; font-size: 8px; letter-spacing: .19em; }
+  .bf-call-copy .bf-eyebrow-line { width: 17px; }
+  .bf-call-title { font-size: clamp(36px, 10vw, 43px); line-height: .82; letter-spacing: -.03em; }
+  .bf-call-subtitle { margin: 6px 0 0; font-size: 11px; line-height: 1.35; }
+
+  .bf-call-object {
+    grid-column: 1;
+    grid-row: 2;
+    width: min(70vw, max(188px, 29dvh), 270px);
+    margin: 0 auto;
+  }
+  .bf-orbit-outer { width: 95%; }
+  .bf-orbit-middle { width: 82%; }
+  .bf-orbit-inner { width: 69%; }
+  .bf-call-dial { width: 61%; }
+  .bf-coordinate { font-size: 7px; letter-spacing: .12em; }
+  .bf-call-icon { width: 48px; height: 48px; margin: 11px 0 8px; }
+  .bf-call-icon svg { width: 24px; height: 24px; }
+  .bf-call-dial-name { font-size: 10px; letter-spacing: .12em; }
+  .bf-call-dial-top, .bf-call-dial-status { font-size: 7px; }
+  .bf-call-dial-status { margin-top: 7px; letter-spacing: .06em; }
+
+  .bf-answer-zone { grid-column: 1; grid-row: 3; width: min(100%, 440px); margin: 0 auto; }
+  .bf-slider { height: 56px; }
+  .bf-slider-handle { width: 48px; height: 48px; }
+  .bf-slider-text { padding-left: 20px; font-size: 8px; letter-spacing: .14em; }
+  .bf-call-secondary-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr) minmax(0, 1.2fr);
+    gap: 2px;
+    margin-top: 5px;
+  }
+  .bf-call-secondary-actions > .bf-text-button,
+  .bf-call-secondary-actions > .bf-skip-link {
+    min-width: 0;
+    min-height: 42px;
+    gap: 4px;
+    padding: 4px 2px;
+    color: #92998f;
+    font-size: 8px;
+    line-height: 1.15;
+    letter-spacing: .015em;
+    text-align: center;
+  }
+  .bf-call-secondary-actions > .bf-skip-link { white-space: nowrap; }
+  .bf-call-secondary-actions .bf-incoming-audio { min-width: 0; margin: 0; }
+  .bf-call-secondary-actions .bf-audio-toggle {
+    min-width: 0;
+    min-height: 42px;
+    justify-content: center;
+    gap: 4px;
+    border: 0;
+    background: transparent;
+    padding: 4px 2px;
+    color: #aab2a5;
+    font-size: 8px;
+    white-space: nowrap;
+  }
+  .bf-call-secondary-actions .bf-audio-toggle svg { width: 14px; height: 14px; }
+  .bf-call-secondary-actions .bf-audio-note { max-width: min(88vw, 320px); margin: 2px auto 0; font-size: 9px; line-height: 1.3; }
+  .bf-public.bf-stage-incoming:not(.bf-phone-mode) .bf-footer,
+  .bf-public.bf-stage-answering:not(.bf-phone-mode) .bf-footer {
+    min-height: 23px;
+    padding-top: 6px;
+    font-size: 7px;
+    letter-spacing: .1em;
+  }
+}
+
+@media (max-width: 380px) {
+  .bf-call-title { font-size: clamp(34px, 10vw, 38px); }
+  .bf-call-object { width: min(69vw, max(180px, 28dvh), 238px); }
+  .bf-call-secondary-actions > .bf-skip-link { font-size: 7px; }
+}
+
+@media (max-height: 690px) and (max-width: 760px) {
+  .bf-call-screen { row-gap: clamp(7px, 1.5dvh, 10px); }
+  .bf-call-copy .bf-eyebrow { margin-bottom: 4px; }
+  .bf-call-subtitle { margin-top: 4px; }
+  .bf-call-secondary-actions { margin-top: 3px; }
 }

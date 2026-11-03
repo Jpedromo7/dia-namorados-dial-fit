@@ -133,10 +133,10 @@ export function PublicExperience({
   }, []);
 
   useEffect(() => {
-    const ringtone = new Audio("/audio/dialfit-incoming-ringtone.wav");
+    const ringtone = new Audio("/audio/dialfit-incoming-call.mp3");
     ringtone.preload = "auto";
     ringtone.loop = true;
-    ringtone.volume = 0.72;
+    ringtone.volume = 0.64;
     ringtoneRef.current = ringtone;
 
     const glitch = new Audio("/audio/dialfit-signal-interference.wav");
@@ -286,7 +286,7 @@ export function PublicExperience({
       return;
     }
 
-    if (callStyle === "original" && stage === "incoming") {
+    if (stage === "incoming") {
       if (soundPendingRef.current) return;
       const ringtone = ringtoneRef.current;
       if (!ringtone) {

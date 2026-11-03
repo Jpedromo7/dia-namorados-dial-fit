@@ -37,7 +37,7 @@ function SoundToggle({ enabled, onToggle, compact = false }: SoundToggleProps) {
       type="button"
       className={`bf-audio-toggle${compact ? " bf-audio-toggle-compact" : ""}`}
       onClick={onToggle}
-      aria-label={enabled ? "Desativar efeitos sonoros" : "Ativar efeitos sonoros"}
+      aria-label={enabled ? "Silenciar som da chamada" : "Ativar som da chamada"}
       aria-pressed={enabled}
     >
       {enabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
@@ -153,7 +153,11 @@ export function OriginalCallInterface({
       <section className="bf-call-screen" aria-labelledby="incoming-title">
         <div className="bf-call-copy">
           <p className="bf-eyebrow"><span className="bf-eyebrow-line" /> CHAMADA RECEBIDA</p>
-          <h1 id="incoming-title" className="bf-call-title">Uma ligação<br /><span>pode mudar tudo.</span></h1>
+          <h1 id="incoming-title" className="bf-call-title">
+            <span>Uma ligação</span>
+            <span>pode mudar</span>
+            <span>tudo.</span>
+          </h1>
           <p className="bf-call-subtitle">Atenda. Tem algo chegando à Dial Fit.</p>
         </div>
 
@@ -172,7 +176,6 @@ export function OriginalCallInterface({
         </div>
 
         <div className="bf-answer-zone">
-          <p className="bf-answer-label">DESLIZE PARA ATENDER <ArrowRight size={14} /></p>
           <div className="bf-slider" ref={sliderRef}>
             <span className="bf-slider-progress" style={{ width: phase === "answering" ? "100%" : `${drag + 56}px` }} />
             <span className="bf-slider-text" aria-hidden="true">DESLIZE PARA ATENDER</span>
@@ -191,25 +194,30 @@ export function OriginalCallInterface({
               <ArrowRight size={20} />
             </button>
           </div>
-          <button className="bf-text-button bf-answer-link" type="button" onClick={onAnswer} disabled={phase !== "incoming"}>Ou toque aqui para atender</button>
-          <div className="bf-incoming-audio">
-            <button
-              className="bf-audio-toggle"
-              type="button"
-              onClick={onToggleSound}
-              aria-label={soundEnabled ? "Silenciar toque da chamada" : "Ativar som da chamada"}
-              aria-pressed={soundEnabled}
-              aria-busy={soundPending}
-              disabled={phase !== "incoming" || soundPending}
-            >
-              {soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
-              {soundPending ? "Ativando toque…" : soundEnabled ? "Silenciar toque" : "Ativar som da chamada"}
+          <div className="bf-call-secondary-actions" role="group" aria-label="Ações da chamada">
+            <button className="bf-text-button bf-answer-link" type="button" onClick={onAnswer} disabled={phase !== "incoming"}>
+              Toque para atender
             </button>
-            {soundBlocked ? <p className="bf-audio-note" role="status">O navegador não liberou o áudio. Você pode atender em silêncio.</p> : null}
+            <div className="bf-incoming-audio">
+              <button
+                className="bf-audio-toggle"
+                type="button"
+                onClick={onToggleSound}
+                aria-label={soundEnabled ? "Silenciar toque da chamada" : "Ativar som da chamada"}
+                aria-pressed={soundEnabled}
+                aria-busy={soundPending}
+                disabled={phase !== "incoming" || soundPending}
+              >
+                {soundEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
+                {soundPending ? "Ativando…" : soundEnabled ? "Silenciar" : "Ativar som"}
+              </button>
+              {soundBlocked ? <p className="bf-audio-note" role="status">O navegador não liberou o áudio. Você pode atender em silêncio.</p> : null}
+            </div>
+            <button className="bf-skip-link" type="button" onClick={onSkip} disabled={phase !== "incoming"}>
+              Pular introdução <ArrowDownRight size={14} />
+            </button>
           </div>
         </div>
-
-        <button className="bf-skip-link" type="button" onClick={onSkip} disabled={phase !== "incoming"}>Pular experiência <ArrowDownRight size={14} /></button>
       </section>
     );
   }
