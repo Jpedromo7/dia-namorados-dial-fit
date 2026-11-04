@@ -13,8 +13,22 @@ function normalizeEmail(value: string) {
 }
 
 function messageFromAuthError(error: unknown) {
-  if (!error || typeof error !== "object" || !("message" in error)) return "";
-  return typeof error.message === "string" ? error.message.toLowerCase() : "";
+  if (!error || typeof error !== "object") return "";
+  const authError = error as { message?: unknown; code?: unknown; error?: unknown };
+  const responseError = authError.error && typeof authError.error === "object"
+    ? authError.error as { message?: unknown; code?: unknown }
+    : null;
+  return [authError.message, authError.code, responseError?.message, responseError?.code]
+    .filter((value): value is string => typeof value === "string")
+    .join(" ")
+    .toLowerCase();
+}
+
+function isExistingAccountError(error: unknown) {
+  const message = messageFromAuthError(error);
+  return message.includes("user_already_exists")
+    || message.includes("already exists")
+    || message.includes("already registered");
 }
 
 export function AdminLogin() {
@@ -110,20 +124,34 @@ export function AdminLogin() {
 
     setPending(true);
     const normalizedEmail = normalizeEmail(email);
+
+    function showExistingAccount() {
+      setView("sign-in");
+      setEmail(normalizedEmail);
+      setPassword("");
+      setPasswordConfirmation("");
+      setNotice("Já existe uma conta com esse e-mail. Entre ou use a opção “Esqueci minha senha”.");
+    }
+
     try {
       const result = await neonAuthClient.signUp.email({ name: name.trim(), email: normalizedEmail, password });
       if (result.error) {
-        const authMessage = messageFromAuthError(result.error);
-        setError(authMessage.includes("already") || authMessage.includes("exist")
-          ? "Já existe uma conta com esse e-mail. Entre ou use a opção “Esqueci minha senha”."
-          : "Não foi possível criar a conta. Confira os dados e tente novamente.");
+        if (isExistingAccountError(result.error)) {
+          showExistingAccount();
+        } else {
+          setError("Não foi possível criar a conta. Confira os dados e tente novamente.");
+        }
         return;
       }
       setPending(false);
       const sent = await requestCode(normalizedEmail, "email-verification", password);
       if (sent) setNotice(`Conta criada. Enviamos um código de confirmação para ${normalizedEmail}.`);
-    } catch {
-      setError("Não foi possível criar a conta agora. Tente novamente.");
+    } catch (error) {
+      if (isExistingAccountError(error)) {
+        showExistingAccount();
+      } else {
+        setError("Não foi possível criar a conta agora. Tente novamente.");
+      }
     } finally {
       setPending(false);
     }
